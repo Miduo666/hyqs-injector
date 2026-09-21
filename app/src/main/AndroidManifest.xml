@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- 显式列出候选包名，这样不需要"获取应用列表"权限，也就不会每次弹窗 -->
+    <queries>
+        <package android:name="com.dygame.hyqs.mi" />
+        <package android:name="com.dygame.hyqs.aligames" />
+        <package android:name="com.dygame.hyqs" />
+        <package android:name="com.dygame.hyqs.huawei" />
+        <package android:name="com.dygame.hyqs.oppo" />
+        <package android:name="com.dygame.hyqs.vivo" />
+        <package android:name="com.dygame.hyqs.yyb" />
+        <package android:name="com.dygame.hyqs.qq" />
+        <package android:name="com.dygame.hyqs.bili" />
+        <package android:name="com.dygame.hyqs.m4399" />
+        <package android:name="com.dygame.hyqs.baidu" />
+        <package android:name="com.dygame.hyqs.lenovo" />
+        <package android:name="com.dygame.hyqs.meizu" />
+        <package android:name="com.dygame.hyqs.uc" />
+        <package android:name="com.dygame.hyqs.taptap" />
+        <package android:name="com.dygame.hyqs.nearme.gamecenter" />
+    </queries>
+
+    <application
+        android:allowBackup="false"
+        android:label="荒野日记注入器"
+        android:usesCleartextTraffic="true"
+        android:supportsRtl="true"
+        android:theme="@android:style/Theme.Material.Light">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="荒野日记注入器">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <service
+            android:name=".InjectVpnService"
+            android:exported="false"
+            android:permission="android.permission.BIND_VPN_SERVICE"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="local hotfix injection proxy" />
+            <intent-filter>
+                <action android:name="android.net.VpnService" />
+            </intent-filter>
+        </service>
+    </application>
+</manifest>

@@ -1,0 +1,53 @@
+plugins {
+    id 'com.android.application'
+}
+
+def signProps = new Properties()
+def signFile = rootProject.file('keystore/signing.properties')
+if (signFile.exists()) {
+    signFile.withInputStream { signProps.load(it) }
+}
+
+android {
+    namespace 'com.hyqs.injector'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.hyqs.injector"
+        minSdk 21
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+        resValue "string", "app_name", "荒野日记注入器"
+    }
+
+    signingConfigs {
+        release {
+            if (signFile.exists()) {
+                storeFile rootProject.file(signProps.getProperty('storeFile'))
+                storePassword signProps.getProperty('storePassword')
+                keyAlias signProps.getProperty('keyAlias')
+                keyPassword signProps.getProperty('keyPassword')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            if (signFile.exists()) signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    packagingOptions {
+        jniLibs.useLegacyPackaging = true
+    }
+}
+
+dependencies {
+}
