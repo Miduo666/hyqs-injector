@@ -6,6 +6,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- 在线更新：下载新版注入器后用 PackageInstaller 安装（系统会弹一次确认） -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <!-- 显式列出候选包名，这样不需要"获取应用列表"权限，也就不会每次弹窗 -->
     <queries>
@@ -25,6 +27,11 @@
         <package android:name="com.dygame.hyqs.uc" />
         <package android:name="com.dygame.hyqs.taptap" />
         <package android:name="com.dygame.hyqs.nearme.gamecenter" />
+        <!-- 在线更新：Android 11+ 要声明才能查到系统安装器 -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:mimeType="application/vnd.android.package-archive" />
+        </intent>
     </queries>
 
     <application
@@ -37,12 +44,20 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:launchMode="singleTask"
             android:label="荒野日记注入器">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- 在线更新：把下载好的新版 APK 只读交给系统安装器 -->
+        <provider
+            android:name=".update.ApkProvider"
+            android:authorities="com.hyqs.injector.apk"
+            android:exported="false"
+            android:grantUriPermissions="true" />
 
         <service
             android:name=".InjectVpnService"

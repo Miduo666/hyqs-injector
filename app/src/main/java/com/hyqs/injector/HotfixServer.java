@@ -27,13 +27,34 @@ public class HotfixServer {
     static final String[] EXTRA_ASSETS = {"repair_icon.png", "reinforce_icon.png", "huoxiang_water.png"};
 
     private final Context ctx;
-    private final JscPatcher patcher;
-    private final Map<String, byte[]> cache = new HashMap<>();
+    private volatile JscPatcher patcher;
+    private final Map<String, byte[]> cache = new java.util.concurrent.ConcurrentHashMap<>();
 
-    /** 从 APK assets 里读出随包携带的文件 */
+    /**
+     * 注入服务运行中拿到了新的在线补丁：换掉补丁处理器、清缓存、重置"已交付"，
+     * 游戏下次检查更新（重开游戏）时就会重新走热更、拿到新补丁。
+     */
+    public void reloadPatch() {
+        cache.clear();
+        patcher = new JscPatcher(ctx);
+        jscDelivered = false;
+        LogBus.log("已切换到新补丁 " + com.hyqs.injector.update.Updater.patchLabel(ctx) + "，完全退出并重开游戏即可生效");
+    }
+
+    /** 本次要下发的图标：内置列表 ∪ 在线更新补丁带的 */
+    private Iterable<String> extraAssets() {
+        return com.hyqs.injector.update.Updater.assetNames(ctx, EXTRA_ASSETS);
+    }
+
+    /** 读随包文件：在线更新补丁带了同名文件就用它，否则读 APK assets */
     private byte[] asset(String name) {
         byte[] hit = cache.get("asset:" + name);
         if (hit != null) return hit;
+        byte[] remote = com.hyqs.injector.update.Updater.activeAsset(ctx, name);
+        if (remote != null) {
+            cache.put("asset:" + name, remote);
+            return remote;
+        }
         try {
             java.io.InputStream in = ctx.getAssets().open(name);
             java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
@@ -121,7 +142,7 @@ public class HotfixServer {
             if (!isAssetCopy && (lower.endsWith("/version.manifest") || lower.endsWith("/project.manifest"))) {
                 return ok(manifest(host, path), "application/json");
             }
-            for (String icon : EXTRA_ASSETS) {
+            for (String icon : extraAssets()) {
                 if (lower.endsWith("/" + icon)) {
                     byte[] body = asset(icon);
                     if (body == null) return notFound();
@@ -183,7 +204,7 @@ public class HotfixServer {
         text = replaceAssetMd5(text, "src/project.jsc", newMd5);
 
         // 把补丁用到的图标加进资源表，游戏会把它们下载到热更目录
-        for (String icon : EXTRA_ASSETS) {
+        for (String icon : extraAssets()) {
             byte[] data = asset(icon);
             if (data == null) continue;
             String entry = "\"" + icon + "\":{\"md5\":\"" + JscPatcher.md5(data) + "\"}";

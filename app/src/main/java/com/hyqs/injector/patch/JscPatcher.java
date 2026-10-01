@@ -30,6 +30,14 @@ public class JscPatcher {
 
     private String loadPatchedJs() throws Exception {
         if (patchedJs == null) {
+            // 在线更新下载过更新的补丁就用它（Updater 已校验过 sha256 和签名），否则用 APK 内置的
+            byte[] remote = com.hyqs.injector.update.Updater.activePatch(ctx);
+            if (remote != null) {
+                patchedJs = new String(remote, "UTF-8");
+                LogBus.log("使用补丁: " + com.hyqs.injector.update.Updater.patchLabel(ctx));
+                return patchedJs;
+            }
+            LogBus.log("使用补丁: " + com.hyqs.injector.update.Updater.patchLabel(ctx));
             InputStream in = ctx.getAssets().open("patched_encrypt.js");
             ByteArrayOutputStream bos = new ByteArrayOutputStream(2 * 1024 * 1024);
             byte[] buf = new byte[65536];

@@ -94,7 +94,9 @@ public class InjectVpnService extends VpnService {
     private void start(String pkg) {
         try {
             if (running) {
-                LogBus.log("注入服务已在运行，忽略重复启动");
+                // 运行中再次注入（通常是在线补丁更新了）：不重建 VPN，只让补丁服务换上新补丁
+                if (server != null) server.reloadPatch();
+                else LogBus.log("注入服务已在运行，忽略重复启动");
                 return;
             }
             fakeIp = Packets.parseIp(FAKE_ADDR);
