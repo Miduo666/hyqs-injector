@@ -1,5 +1,19 @@
 window.__OPT = window.__OPT || {};
-(function(o){var d={roles:1,coins:1,keys:1,robot:1,talents:1,shop:1,attr:1,workbench:1,smelter:1,barb:1,recipes:1,tuning:1,fixes:1,ui:1};for(var k in d){if(o[k]===undefined)o[k]=d[k];}})(window.__OPT);
+(function(o){var d={roles:1,coins:1,keys:1,robot:1,talents:1,shop:1,attr:1,workbench:1,smelter:1,barb:1,recipes:1,tuning:1,fixes:1,ui:1,blueprints:1,consumables:1,gifts:1,huoxiang:1,brewery:1,veg:1,offhand:1,camel:1,secretCamp:1,beastDen:1};for(var k in d){if(o[k]===undefined)o[k]=d[k];}if(!o.bpList)o.bpList=[];if(!o.grant)o.grant=[];})(window.__OPT);
+// 友·X(4201~4205) 获得时直接换成 礼·X(420X01)。只换数量为正的（扣减照旧，送礼扣友不受影响）；不改传入对象，返回新对象
+window.__F2G = {"4201":"420101","4202":"420201","4203":"420301","4204":"420401","4205":"420501"};
+window.__f2g = function(e, t) {
+if (!window.__OPT.gifts || !e) return e;
+if ("object" != typeof e) return window.__F2G[e] && t > 0 ? window.__F2G[e] : e;
+var r = null;
+for (var k in e) if (window.__F2G[k] && e[k] > 0) { r = {}; break; }
+if (!r) return e;
+for (var k2 in e) {
+var nk = window.__F2G[k2] && e[k2] > 0 ? window.__F2G[k2] : k2;
+r[nk] = (r[nk] || 0) + e[k2];
+}
+return r;
+};
 require = function e(t, a, n) {
 function i(r, c) {
 if (!a[r]) {
@@ -5083,6 +5097,18 @@ preloadWhenMain: function() {},
 preloadWhenStoryBegin: function() {},
 preloadWhenHome: function() {},
 loadRes: function(e, t, a) {
+var __ra = window.__resAlias && window.__resAlias[e];
+if (__ra) {
+if (__ra.file && window.__loadCustomIconFrame) {
+window.__loadCustomIconFrame(__ra.file, function(__sf) {
+if (__sf) a && a(null, __sf); else if (__ra.fallback) cc.loader.loadRes(__ra.fallback, t, function(e, t) {
+a && a(e, t);
+}); else a && a(new Error("custom res missing: " + e));
+});
+return;
+}
+__ra.path && (e = __ra.path);
+}
 return cc.loader.loadRes(e, t, function(e, t) {
 a && a(e, t);
 e || cc.loader.setAutoReleaseRecursively(t, !0);
@@ -5690,13 +5716,1015 @@ window.__BARB_BUY_VALUE = {
 window.__BARB_SELL_VALUE = {
 "4009": 10
 };
+// 机关剑副手（见 _atk_offhand）：描述里说明双持
+var __msword = window.__OPT.offhand && __itemPf && __itemPf["4145"];
+__msword && __msword.DESC && !__msword.__descPatched && (__msword.__descPatched = 1, __msword.DESC = {
+cn: __msword.DESC.cn + "。没有箭且作为远程武器时将变为近战武器，左右双持",
+en: __msword.DESC.en + ". When equipped as a ranged weapon with no arrows left, it turns into a second melee weapon (dual wielding)",
+tw: __msword.DESC.tw + "。沒有箭且作為遠程武器時將變為近戰武器，左右雙持"
+});
 var __tusk = __itemPf && __itemPf["4009"];
+// SOURCE 只在建筑建造/升级材料里按住才显示，猪牙不是建筑材料，所以提示接到 DESC 后面（背包/仓库点开显示的是 DESC）
+__tusk && __tusk.DESC && !__tusk.__descPatched && (__tusk.__descPatched = 1, __tusk.DESC = {
+cn: __tusk.DESC.cn + "。与野猪战斗后有概率获得，野蛮人很喜欢收购",
+en: __tusk.DESC.en + ". Dropped by wild boars; the barbarian loves to buy it",
+tw: __tusk.DESC.tw + "。與野豬戰鬥後有概率獲得，野蠻人很喜歡收購"
+});
 __tusk && (__tusk.SOURCE = {
 cn: "与野猪战斗后有概率获得，可卖给野蛮人",
 en: "Dropped by wild boars; sells well to the barbarian",
 tw: "與野豬戰鬥後有概率獲得，可賣給野蠻人"
 });
 window.__BARB_POOL_IDS = [ "4074", "4071", "4072", "4440", "4426", "4427", "4089", "4028", "4030", "4036", "4015", "4013", "4038", "4024", "4434", "4435", "4436", "4084", "4085", "4086", "4068", "4025", "4094", "4011", "4012", "4033", "4037", "4039", "4027", "4016", "4017", "4026", "4043", "4019", "4118", "4104", "4103", "4115", "4125", "4018", "4123", "4141" ];
+// 藿香正气水（复活废案藿香 4014）。物品/buff/采集点定义无条件注册：存档里一旦有了这些 ID，配置表缺失就会报错；开关只管配方、采集点显示和野蛮人收购价
+window.__HX = {
+WATER: "4490",
+BUFF: "8031",
+MID: "1240",
+POT: "1007",
+STAGE: "28",
+DROP: "5090",
+PRODUCT: 1505,
+RESIST: 10
+};
+var __hx = window.__HX, __hxHerb = __itemPf && __itemPf["4014"];
+if (__hxHerb) {
+__hxHerb.ATTRS = {
+"7005": 5,
+"7000": 5,
+"7001": -5
+};
+__hxHerb.DESC && !__hxHerb.__descPatched && (__hxHerb.__descPatched = 1, __hxHerb.DESC = {
+cn: __hxHerb.DESC.cn + "。林中暗流通关后，可在林中暗流采集",
+en: __hxHerb.DESC.en + ". Can be collected at the Hidden Stream once it has been cleared",
+tw: __hxHerb.DESC.tw + "。林中暗流通關後，可在林中暗流採集"
+});
+__hxHerb.SOURCE = {
+cn: "林中暗流通关后，可在林中暗流采集",
+en: "Collected at the Hidden Stream once it has been cleared",
+tw: "林中暗流通關後，可在林中暗流採集"
+};
+}
+__itemPf && !__itemPf[__hx.WATER] && (__itemPf[__hx.WATER] = {
+"ID": __hx.WATER,
+"NAME": {
+cn: "藿香正气水",
+en: "Patchouli Tincture",
+tw: "藿香正氣水"
+},
+"DESC": {
+cn: "用淡水煎煮藿香，再兑入酒精浸制而成的药水。能少量恢复内伤和外伤，喝下后让人精神一振，并感觉抗毒、抗眩晕的能力变强了",
+en: "Patchouli simmered in fresh water and steeped in alcohol. Mildly heals internal and external wounds, sharpens the mind, and seems to strengthen resistance to poison and dizziness",
+tw: "用淡水煎煮藿香，再兌入酒精浸製而成的藥水。能少量恢復內傷和外傷，喝下後讓人精神一振，並感覺抗毒、抗眩暈的能力變強了"
+},
+"TYPE": "drug",
+"WEIGHT": "1",
+"VALUE": "8",
+"COIN_VALUE": 240,
+"ATTRS": {
+"7004": 5,
+"7005": 20,
+"7000": 80,
+"7001": -10
+},
+"BUFFS": [ __hx.BUFF ],
+"SOURCE": {
+cn: "主要通过<color=#ff0000>制作</c>获得",
+en: "Mainly obtained from <color=#ff0000>crafting</c>",
+tw: "主要通過<color=#ff0000>製作</c>獲得"
+}
+});
+var __hxBuffPf = a.mProfiles["Profiles/buff_profile"];
+__hxBuffPf && !__hxBuffPf[__hx.BUFF] && (__hxBuffPf[__hx.BUFF] = {
+"H_TIME": 86400,
+"ATTRS": {
+"7113": __hx.RESIST,
+"7114": __hx.RESIST
+},
+"AUTO_RELEASE": 1
+});
+// getBuffDataForAttr 只查 attr_buff_profile 的索引，不登记的话 buff 挂上了也不生效
+var __hxAb = a.mProfiles["Profiles/attr_buff_profile"];
+__hxAb && [ "7113", "7114" ].forEach(function(__k) {
+var __l = __hxAb[__k] = __hxAb[__k] || [];
+__l.indexOf(+__hx.BUFF) < 0 && __l.indexOf(__hx.BUFF) < 0 && __l.push(+__hx.BUFF);
+});
+[ "Profiles/monster_profile", "Profiles/c_monster_profile" ].forEach(function(__pk) {
+var __mpf = a.mProfiles[__pk];
+if (!__mpf || __mpf[__hx.MID] || !__mpf["1103"]) return;
+var __m = JSON.parse(JSON.stringify(__mpf["1103"]));
+__m.ID = __hx.MID;
+__m.NAME = {
+cn: "藿香",
+en: "Patchouli",
+tw: "藿香"
+};
+__mpf[__hx.MID] = __m;
+});
+var __hxDrop = a.mProfiles["Profiles/drop_profile"];
+__hxDrop && !__hxDrop[__hx.DROP] && (__hxDrop[__hx.DROP] = {
+"4014": {
+"MIN": 1,
+"MAX": 1,
+"RATIO": 100
+},
+"4205": {
+"MIN": 1,
+"MAX": 1,
+"RATIO": 2
+}
+});
+// 林中暗流采集点 1007 只在副本 7 通关后解锁。首次 8 个；采空后等 5 天(COLD 120 小时)重刷 4 个(REFILL_CNT)；每小时增长 floor(数量)*CIRCLE/100，8 个时 0.1；上限 12
+[ "Profiles/pot_profile", "Profiles/c_pot_profile" ].forEach(function(__pk) {
+var __ppf = a.mProfiles[__pk], __pot = __ppf && __ppf[__hx.POT];
+if (!__pot || !__pot.STAGE) return;
+__pot.STAGE[__hx.STAGE] = {
+"MID": __hx.MID,
+"DIS": 1,
+"RAW_CNT": 8,
+"REFILL_CNT": 4,
+"MAX_CNT": 12,
+"COLD": 120,
+"WAY": {
+cn: "采集",
+en: "Collect",
+tw: "采集"
+},
+"POTS": [ __hx.POT ],
+"PROMOTE": [],
+"RESTRAIN": [],
+"DROP_ID": +__hx.DROP,
+"CIRCLE": 1.25,
+"DESC": {
+cn: "暗流边的湿地上长着一片藿香，紫色的花穗散发出浓烈的香气",
+en: "A patch of patchouli grows on the damp bank of the stream, its purple spikes giving off a strong scent",
+tw: "暗流邊的濕地上長著一片藿香，紫色的花穗散發出濃烈的香氣"
+},
+"DESC1": {
+cn: "采集中",
+en: "Collecting",
+tw: "采集中"
+},
+"DESC2": {
+cn: "继续采集",
+en: "Continue to collect",
+tw: "繼續采集"
+},
+"COND": window.__OPT.huoxiang ? {} : {
+"1002": 99999
+}
+};
+});
+var __hxMed = __bpp["3004"];
+window.__OPT.huoxiang && __hxMed && __hxMed.PRODUCT && !__hxMed.PRODUCT["13"] && (__hxMed.PRODUCT["13"] = {
+"ID": __hx.PRODUCT,
+"P_COST": {
+"4002": 2,
+"4014": 2,
+"4037": 1
+},
+"P_TIME": 1800,
+"C_TIME": 0,
+"ITEMS": {
+"4490": 1
+},
+"LEVEL": 2,
+"AUDIO": "build_pill",
+"DESC": {
+cn: "制作藿香正气水",
+en: "Craft Patchouli Tincture",
+tw: "製作藿香正氣水"
+},
+"TITLE": {
+cn: "制作",
+en: "Craft",
+tw: "製作"
+}
+});
+window.__OPT.huoxiang && (window.__BARB_SELL_VALUE["4014"] = 1);
+// 图标：藿香正气水用随热更下发的 huoxiang_water.png（缺失时退回药酒图标）；采集列表小图标借用藿香物品图标
+window.__resAlias = window.__resAlias || {};
+window.__resAlias["Texture/Item/" + __hx.WATER] = {
+file: "huoxiang_water.png",
+fallback: "Texture/Item/4019"
+};
+window.__resAlias["Texture/Monster/mi_" + __hx.MID] = {
+path: "Texture/Item/4014"
+};
+window.__resAlias["Texture/Monster/" + __hx.MID] = {
+path: "Texture/Monster/1207"
+};
+// 净水台 3009 升级为酿酒台（新增主线等级 "2"），保留净水台原有配方，另加土豆酿酒。等级定义无条件注册（存档里 LEVEL=2 后缺定义会出错），开关只管能不能升
+var __bldPf = a.mProfiles["Profiles/build_profile"], __pur = __bldPf && __bldPf["3009"];
+if (__pur && __pur["1"] && !__pur["2"]) __pur["2"] = {
+"NAME": {
+cn: "酿酒台",
+en: "Brewery",
+tw: "釀酒臺"
+},
+"DURATION": 150,
+"P_TIME": 5400,
+"R_TIME": 2700,
+"DURA_COST": 1,
+"DESC": {
+cn: "在净水台旁加装了发酵用的陶缸，除了蒸馏淡水，还能把土豆酿成土豆酒",
+en: "Clay vats for fermentation have been added to the purifier. Besides distilling water, it can now brew potato wine",
+tw: "在淨水臺旁加裝了發酵用的陶缸，除了蒸餾淡水，還能把土豆釀成土豆酒"
+},
+"UPGRADE": {
+"4000": 6,
+"4001": 0,
+"4003": 4,
+"4004": 6,
+"4005": 0,
+"4031": 4
+},
+"REPAIR": {
+"4000": 6,
+"4001": 0,
+"4003": 4,
+"4004": 6,
+"4005": 0,
+"4031": 4
+},
+"EVENTS": {},
+"COND": window.__OPT.brewery ? {
+"1002": 15
+} : {
+"1002": 99999
+},
+"EXCLUDE_ROLE": [ "1000" ],
+"LOCK_TIP": window.__OPT.brewery ? {
+cn: "生存满15天后可升级为酿酒台",
+en: "Can become a Brewery after surviving 15 days",
+tw: "生存滿15天後可升級為釀酒臺"
+} : null,
+"ROLE_TIP": window.__OPT.brewery ? {
+cn: "罗兰已有专属酿酒台",
+en: "Roland already has her own Brewery",
+tw: "羅蘭已有專屬釀酒臺"
+} : null
+};
+var __brewSrc = __bpp["3011"] && __bpp["3011"].PRODUCT && __bpp["3011"].PRODUCT["1"];
+if (window.__OPT.brewery && __brewSrc && __bpp["3009"] && __bpp["3009"].PRODUCT && !__bpp["3009"].PRODUCT["5"]) {
+var __brew = JSON.parse(JSON.stringify(__brewSrc));
+__brew.ID = 1506;
+__brew.LEVEL = 2;
+// 配方详情页没到等级时默认显示"需要更高等级建筑"，净水台满级后玩家会困惑，换成具体说明
+__brew.LOCK_TIP = {
+cn: "需要酿酒台(生存满15天可升级)",
+en: "Needs Brewery (upgrade after 15 days)",
+tw: "需要釀酒臺(生存滿15天可升級)"
+};
+__brew.ROLE_TIP = {
+cn: "请用罗兰专属的酿酒台",
+en: "Use Roland's own Brewery",
+tw: "請用羅蘭專屬的釀酒臺"
+};
+__bpp["3009"].PRODUCT["5"] = __brew;
+}
+// 主线等级的 COND 原版升级界面不检查（只查 _1 分支），这里补上；EXCLUDE_ROLE 是自定义字段（原版 CT_ROLE 数组写法有 bug，表达不了"除某角色外"）
+window.__levelLocked = function(__lv) {
+if (!__lv) return !1;
+if (__lv.COND && !HYCommon.checkCondition(__lv.COND)) return !0;
+return !!(__lv.EXCLUDE_ROLE && __lv.EXCLUDE_ROLE.indexOf(String(HYData.get("core.role.ID"))) >= 0);
+};
+// 升不了的原因对应的提示（多语言对象），没有就返回 null；角色限制优先
+window.__levelLockTip = function(__lv) {
+if (!__lv) return null;
+if (__lv.EXCLUDE_ROLE && __lv.EXCLUDE_ROLE.indexOf(String(HYData.get("core.role.ID"))) >= 0) return __lv.ROLE_TIP || null;
+return __lv.COND && !HYCommon.checkCondition(__lv.COND) ? __lv.LOCK_TIP || null : null;
+};
+// 升级后图标直接借酿酒台的：营地图 bi_、列表图标 bii_，各营地皮肤目录都映射（皮肤里没有时 setBuildIcon 会退回 normal 再走一次映射）
+[ "normal", "snow", "nation" ].forEach(function(__sk) {
+[ "bi_", "bii_" ].forEach(function(__pre) {
+window.__resAlias["Texture/Builds/" + __sk + "/" + __pre + "3009_2"] = {
+path: "Texture/Builds/" + __sk + "/" + __pre + "3011_1"
+};
+});
+});
+// 净水台雪球原本限 2020 圣诞(CT_REAL 1036)，去掉时间条件
+window.__OPT.recipes && __bpp["3009"] && __bpp["3009"].PRODUCT && __bpp["3009"].PRODUCT["4"] && delete __bpp["3009"].PRODUCT["4"].COND;
+// 野菜（复活废案 4023）：到达通关后的采集点时 30% 刷出 2 个（不增长、不定时重刷），火堆做 6 种有美味版的食物时有野菜就额外消耗 1 个，美味概率提到 50%
+window.__VEG = {
+ITEM: "4023",
+MID: "1242",
+STAGE: "29",
+DROP: "5092",
+FOODS: [ "4025", "4040", "4070", "4026", "4041", "4043" ]
+};
+var __veg = window.__VEG, __vegItem = __itemPf && __itemPf[__veg.ITEM];
+if (__vegItem) {
+__vegItem.DESC && !__vegItem.__descPatched && (__vegItem.__descPatched = 1, __vegItem.DESC = {
+cn: __vegItem.DESC.cn + "。到达通关后的采集点时，偶尔能在附近找到",
+en: __vegItem.DESC.en + ". Occasionally found near cleared collection spots when you arrive",
+tw: __vegItem.DESC.tw + "。到達通關後的採集點時，偶爾能在附近找到"
+});
+__vegItem.SOURCE = {
+cn: "到达通关后的采集点时偶尔出现",
+en: "Occasionally appears at cleared collection spots",
+tw: "到達通關後的採集點時偶爾出現"
+};
+}
+[ "Profiles/monster_profile", "Profiles/c_monster_profile" ].forEach(function(__pk) {
+var __mpf = a.mProfiles[__pk];
+if (!__mpf || __mpf[__veg.MID] || !__mpf["1103"]) return;
+var __m = JSON.parse(JSON.stringify(__mpf["1103"]));
+__m.ID = __veg.MID;
+__m.NAME = {
+cn: "野菜",
+en: "Wild Greens",
+tw: "野菜"
+};
+__mpf[__veg.MID] = __m;
+});
+__hxDrop && !__hxDrop[__veg.DROP] && (__hxDrop[__veg.DROP] = {
+"4023": {
+"MIN": 1,
+"MAX": 1,
+"RATIO": 100
+}
+});
+[ "Profiles/pot_profile", "Profiles/c_pot_profile" ].forEach(function(__pk) {
+var __ppf = a.mProfiles[__pk];
+if (!__ppf) return;
+for (var __pid in __ppf) {
+var __pot = __ppf[__pid];
+if (!__pot || "102" != __pot.TYPE || !__pot.STAGE || __pot.STAGE[__veg.STAGE]) continue;
+var __vc = {
+"1012": {}
+};
+__vc["1012"][__pid] = {};
+__vc["1012"][__pid][__veg.STAGE] = 1;
+__pot.STAGE[__veg.STAGE] = {
+"MID": __veg.MID,
+"DIS": 1,
+"RAW_CNT": 0,
+"REFILL_CNT": 0,
+"MAX_CNT": 2,
+"COLD": 999999,
+"WAY": {
+cn: "采集",
+en: "Collect",
+tw: "采集"
+},
+"POTS": [ __pid ],
+"PROMOTE": [],
+"RESTRAIN": [],
+"DROP_ID": +__veg.DROP,
+"CIRCLE": 0,
+"DESC": {
+cn: "路边冒出了几株鲜嫩的野菜，烹饪时加上一点，味道会好很多",
+en: "A few tender wild greens have sprung up by the path. A little of them makes cooking taste much better",
+tw: "路邊冒出了幾株鮮嫩的野菜，烹飪時加上一點，味道會好很多"
+},
+"DESC1": {
+cn: "采集中",
+en: "Collecting",
+tw: "采集中"
+},
+"DESC2": {
+cn: "继续采集",
+en: "Continue to collect",
+tw: "繼續采集"
+},
+"COND": window.__OPT.veg ? __vc : {
+"1002": 99999
+}
+};
+}
+});
+window.__OPT.veg && (window.__BARB_SELL_VALUE[__veg.ITEM] = 1);
+window.__resAlias["Texture/Monster/mi_" + __veg.MID] = {
+path: "Texture/Item/" + __veg.ITEM
+};
+window.__resAlias["Texture/Monster/" + __veg.MID] = {
+path: "Texture/Monster/1105"
+};
+// 只在所在地点真的变了、且新地点是采集点(副本通关后才会出现)时掷一次；点自己所在的点不重掷
+window.__vegOnArrive = function(__from, __to) {
+try {
+if (!window.__OPT.veg || null == __to || String(__from) == String(__to)) return;
+var __p = HYCommon.getProfile("getById", "Profiles/pot_profile", __to);
+if (!__p || "102" != __p.TYPE || !__p.STAGE || !__p.STAGE[__veg.STAGE]) return;
+HYWorld.fetchPotData(__to);
+var __key = "core.world.pot.{0}.STAGE.{1}".format(__to, __veg.STAGE);
+HYData.get(__key) || HYData.set(__key, {
+CNT: 0,
+TIME: HYTime.timeline()
+});
+if (Math.random() >= .3) return;
+HYData.set(__key + ".CNT", 2);
+HYData.set(__key + ".TIME", HYTime.timeline());
+HYCommon.toast("你在附近发现了 2 株野菜", 1.5);
+} catch (__ve) {
+cc.error && cc.error("veg arrive error: " + __ve);
+}
+};
+// 火堆做有美味版的食物时：身上/仓库有野菜就在材料里加 1 个野菜，否则去掉；材料格不够时复制一格
+window.__vegSync = function(e) {
+if (!e || !e.buildConsume || !e.productObj) return;
+var __on = !!window.__OPT.veg && ("3002" == e.buildId || "3002_1" == e.buildId);
+if (__on) {
+__on = !1;
+for (var __i in e.productObj.ITEMS || {}) __veg.FOODS.indexOf(String(__i)) >= 0 && (__on = !0);
+}
+var __have = __on ? "3002_1" == e.buildId ? HYBag.getItemCnt(__veg.ITEM) : HYCommon.getItemCntAll(__veg.ITEM) : 0;
+__on && __have >= 1 ? e.buildConsume[__veg.ITEM] = 1 : delete e.buildConsume[__veg.ITEM];
+var __n = 0;
+for (var __k in e.buildConsume) e.buildConsume[__k] > 0 && __n++;
+var __ch = e.nodMaterial && e.nodMaterial.children;
+if (__ch && __ch.length) for (var __j = __ch.length; __j < __n; __j++) e.nodMaterial.addChild(cc.instantiate(__ch[0]));
+};
+// ===== 秘密营地 =====
+// 地图点 9100/9101/9102 对应开局三选一的 CAMP_POS 0/1/2，只显示没选的两个，生存满 20 天出现。
+// 营地逻辑全部复用原版：进营地时把 core.builds / core.warehouse / 营地制作计时 buff 整体切换成该营地那份，离开时切回主营地。
+// 存档：core.campActive = 当前加载的营地("0" 为主营地)；core.campSnaps.<id> = 未加载营地的快照；core.world.pot.<id>.BUILT = 已建成
+window.__CAMP = {
+IDS: [ "9100", "9101", "9102" ],
+NAMES: [ "竹林", "树林", "瀑布" ],
+RECIPE: {
+"4004": 12,
+"4000": 6,
+"4003": 8,
+"4005": 6,
+"4031": 3
+},
+CAP: 500,
+BUILD_SEC: 21600,
+BUFFS: []
+};
+var __camp = window.__CAMP, __campBuffSeen = {};
+for (var __cb in __bpp) for (var __cp in __bpp[__cb] && __bpp[__cb].PRODUCT || {}) {
+var __cbf = __bpp[__cb].PRODUCT[__cp] && __bpp[__cb].PRODUCT[__cp].BUFF;
+__cbf && !(+__cbf >= 6005 && +__cbf <= 6008) && !__campBuffSeen[__cbf] && (__campBuffSeen[__cbf] = 1, __camp.BUFFS.push(String(__cbf)));
+}
+[ "Profiles/pot_profile", "Profiles/c_pot_profile" ].forEach(function(__pk) {
+var __ppf = a.mProfiles[__pk];
+__ppf && __camp.IDS.forEach(function(__cid, __ci) {
+__ppf[__cid] || (__ppf[__cid] = {
+"ID": __cid,
+"NAME": {
+cn: "秘密营地（" + __camp.NAMES[__ci] + "）",
+en: "Secret Camp (" + [ "Bamboo", "Woods", "Waterfall" ][__ci] + ")",
+tw: "秘密營地（" + [ "竹林", "樹林", "瀑布" ][__ci] + "）"
+},
+"TYPE": "100",
+"DESC": {
+cn: "当初没有选中的营地选址。在这里建一处秘密营地：野兽找不到这里，也不用修栅栏，家具损耗只有一半，但地方不大，仓库只放得下 " + __camp.CAP + " 负重的东西",
+en: "One of the camp sites you passed on. A secret camp here is never raided by beasts, needs no fence and wears furniture half as fast, but its storehouse only holds " + __camp.CAP + " weight",
+tw: "當初沒有選中的營地選址。在這裡建一處秘密營地：野獸找不到這裡，也不用修柵欄，家具損耗只有一半，但地方不大，倉庫只放得下 " + __camp.CAP + " 負重的東西"
+},
+"ICON": "pi_0",
+"PIC": "Texture/World/pdi_0",
+"SECRET_CAMP": __ci
+});
+});
+});
+window.__campIsSecretPot = function(__id) {
+return __camp.IDS.indexOf(String(__id)) >= 0;
+};
+window.__campIsBuilt = function(__id) {
+return !!HYData.get("core.world.pot." + __id + ".BUILT");
+};
+window.__campActive = function() {
+var __a = HYData.get("core.campActive");
+return null == __a || "" === __a ? "0" : String(__a);
+};
+window.__campIsSecret = function() {
+return "0" != window.__campActive();
+};
+window.__campPotShow = function(__id) {
+if (!window.__OPT.secretCamp) return !1;
+var __p = HYCommon.getProfile("getById", "Profiles/pot_profile", __id);
+if (!__p) return !1;
+return HYTime.day() >= 20 && String(__p.SECRET_CAMP) != String(HYData.get("core.startOption.CAMP_POS") || 0);
+};
+window.__campIsHomePot = function(__id) {
+return "0" == String(__id) || window.__campIsSecretPot(__id) && window.__campIsBuilt(__id) && window.__campActive() == String(__id);
+};
+var __campClone = function(__o) {
+return null == __o ? {} : JSON.parse(JSON.stringify(__o));
+};
+window.__campSnap = function() {
+var __b = {}, __all = HYData.get("core.events.buffs") || {};
+__camp.BUFFS.forEach(function(__id) {
+null != __all[__id] && (__b[__id] = __all[__id]);
+});
+return {
+builds: __campClone(HYData.get("core.builds")),
+warehouse: __campClone(HYData.get("core.warehouse")),
+buffs: __b
+};
+};
+window.__campApply = function(__s) {
+__s = __s || {};
+HYData.set("core.builds", __campClone(__s.builds));
+HYData.set("core.warehouse", __campClone(__s.warehouse));
+__camp.BUFFS.forEach(function(__id) {
+__s.buffs && null != __s.buffs[__id] ? HYData.set("core.events.buffs." + __id, __s.buffs[__id]) : HYData.get("core.events.buffs." + __id) && HYData.clear("core.events.buffs." + __id);
+});
+};
+window.__campSwitch = function(__to) {
+__to = String(__to);
+var __from = window.__campActive();
+if (__from == __to) return;
+HYData.set("core.campSnaps." + __from, window.__campSnap());
+window.__campApply(HYData.get("core.campSnaps." + __to));
+HYData.clear("core.campSnaps." + __to);
+HYData.set("core.campActive", __to);
+};
+// 临时把某个营地加载成当前状态执行 fn（夜袭只打主营地、恶劣天气打所有营地都靠它），执行完切回原来的营地
+window.__campRunAs = function(__to, __fn) {
+__to = String(__to);
+var __act = window.__campActive();
+if (__act == __to) return __fn();
+window.__campSwitch(__to);
+try {
+return __fn();
+} finally {
+window.__campSwitch(__act);
+}
+};
+window.__campBuiltIds = function() {
+return __camp.IDS.filter(function(__id) {
+return window.__campIsBuilt(__id);
+});
+};
+// 重量和背包负重同一口径：HYCommon.countWeight（含求生册减重）
+window.__campItemWeight = function(__id) {
+var __o = {};
+__o[__id] = 1;
+return Math.max(0, HYCommon.countWeight(__o));
+};
+window.__campWareWeight = function() {
+var __w = HYData.get("core.warehouse") || {}, __t = 0;
+for (var __k in __w) __t += (parseInt(__w[__k]) || 0) * window.__campItemWeight(__k);
+return __t;
+};
+// 秘密营地仓库剩余容量；主营地不限
+window.__campWareLeft = function() {
+return window.__campIsSecret() ? __camp.CAP - window.__campWareWeight() : 1 / 0;
+};
+window.__campWareFullFor = function(__id, __n) {
+if (!window.__campIsSecret()) return !1;
+var __w = window.__campItemWeight(__id) * (__n || 1);
+return __w > 0 && __w > window.__campWareLeft();
+};
+window.__campWareText = function() {
+return "仓库 " + Math.round(10 * window.__campWareWeight()) / 10 + "/" + __camp.CAP;
+};
+// 在 __parent 下挂一行容量文字（只在秘密营地里显示）；字体抄 __fontSrc，定时刷新（丢弃/使用物品后也能跟上）
+window.__campWareLabel = function(__host, __parent, __x, __y, __color, __fs, __fontSrc, __visible) {
+if (!__parent || !window.__campIsSecret()) return;
+var __nd = __parent.getChildByName("__campCap");
+if (!__nd) {
+__nd = new cc.Node("__campCap");
+var __lb = __nd.addComponent(cc.Label);
+__fontSrc && __fontSrc.font && (__lb.font = __fontSrc.font);
+__lb.fontSize = __fs;
+__lb.lineHeight = __fs + 6;
+__nd.color = __color;
+__nd.x = __x;
+__nd.y = __y;
+__parent.addChild(__nd);
+var __upd = function() {
+if (!cc.isValid(__nd)) return;
+__nd.active = !__visible || __visible();
+__lb.string = window.__campWareText();
+__nd.color = window.__campWareLeft() <= 0 ? new cc.Color(200, 30, 30) : __color;
+};
+__upd();
+__host.schedule(__upd, .5);
+}
+};
+// 秘密营地里：栅栏、剧情/角色专属建筑(31xx)、机关甲人(3200)都不出现
+window.__campLockBuild = function(__bid) {
+return window.__campIsSecret() && ("3005" == String(__bid) || +__bid >= 3100);
+};
+// 建成时生成全新营地：按当前角色的初始建筑表，和新开一局一样
+window.__campFreshBuilds = function() {
+var __saved = __campClone(HYData.get("core.builds"));
+HYData.set("core.builds", {});
+var __rb = dy.profile.cloneById("Profiles/role_builds_profile", HYData.get("core.role.ID")) || {};
+for (var __bid in __rb) HYPlayer.addBuild(__bid, __rb[__bid].LEVEL, __rb[__bid].LOCK);
+var __fresh = __campClone(HYData.get("core.builds"));
+HYData.set("core.builds", __saved);
+return __fresh;
+};
+window.__campRecipeText = function(__have) {
+var __s = [];
+for (var __k in __camp.RECIPE) {
+var __ip = dy.profile.getById("Profiles/item_profile", __k), __nm = __ip ? __ip.NAME[dy.cache.language] || __ip.NAME.cn : __k;
+__s.push(__nm + " " + (__have ? Math.min(__have[__k] || 0, __camp.RECIPE[__k]) + "/" : "") + __camp.RECIPE[__k]);
+}
+return __s.join("、");
+};
+// 到达面板"建造营地"：材料先从存放点扣，不够再扣背包；推进 6 小时；存放点剩下的东西搬进新仓库
+window.__campBuildFlow = function(__pot) {
+var __st = HYWorld.getStorage(__pot) || {}, __have = {}, __ok = !0;
+for (var __k in __camp.RECIPE) {
+__have[__k] = (parseInt(__st[__k]) || 0) + (HYBag.getItemCnt(__k) || 0);
+__have[__k] < __camp.RECIPE[__k] && (__ok = !1);
+}
+var __title = "建造秘密营地";
+if (!__ok) {
+HYCommon.alert(__title, "材料不足（存放点+背包）：\n" + window.__campRecipeText(__have) + "\n\n可以先把材料存放在这里，凑齐后再来建造。", "知道了");
+return;
+}
+window.__alertSelectFit(__title, "消耗：" + window.__campRecipeText() + "\n（优先使用存放点里的材料）\n耗时 6 小时。\n\n建成后：不会被野兽袭击、不用栅栏、家具耐久消耗减半，仓库容量 " + __camp.CAP + "。", "建造", "取消", function() {
+window.__campProgress(__title, "正在搭建营地……", function() {
+window.__campDoBuild(__pot, __st);
+return "秘密营地建成了！再次到达这里就可以进入营地。";
+});
+}, null);
+};
+// PanelAlertSelect 的正文 labMag 是 400x120 + RESIZE_HEIGHT，背景(493)和按钮(y=-157)位置固定，长文本会往下压住按钮、溢出背景。
+// 这里按正文实际高度拉伸背景并下移按钮。原布局：标题距顶 71.5，正文顶距顶 109.5，按钮高 96、底距底 41.5
+window.__alertSelectFit = function(__t, __m, __ok, __cancel, __fnOk, __fnCancel) {
+dy.loader.loadRes("Prefabs/Widget/PanelAlertSelect", cc.Prefab, function(__e, __pf) {
+if (__e || !__pf) return HYCommon.alertSelect(__t, __m, __ok, __cancel, __fnOk, __fnCancel);
+var __pn = cc.instantiate(__pf), __pc = __pn.getComponent("PanelAlertSelect");
+__pc.init(__t, __m, __ok, __cancel, __fnOk, __fnCancel);
+dy.theRoot.node.parent.addChild(__pn, 100);
+try {
+var __lab = __pc.labMsg, __core = __lab.node.parent, __bg = __core.getChildByName("Sprite"), __fs = 26, __lh = 34, __lw = 400, __gap = 40;
+__lab.overflow = cc.Label.Overflow.RESIZE_HEIGHT;
+__lab.enableWrapText = !0;
+__lab.fontSize = __fs;
+__lab.lineHeight = __lh;
+__lab.node.width = __lw;
+var __layout = function(__h) {
+var __bh = Math.max(493, 109.5 + __h + __gap + 96 + 41.5), __top = __bh / 2, __by = __top - 109.5 - __h - __gap - 48;
+__bg && (__bg.height = __bh);
+__pc.labTitle.node.y = __top - 71.5;
+__lab.node.y = __top - 109.5;
+__pc.btnAssign.node.y = __by;
+__pc.btnCancel.node.y = __by;
+};
+var __rows = 0;
+__m.split("\n").forEach(function(__ln) {
+for (var __u = 0, __ci = 0; __ci < __ln.length; __ci++) __u += __ln.charCodeAt(__ci) > 255 ? 1 : .55;
+__rows += Math.max(1, Math.ceil(__u * __fs / __lw));
+});
+__layout(__rows * __lh);
+// 估算只为首帧不跳，下一帧按 Label 实际撑开的高度再排
+__pc.scheduleOnce(function() {
+__lab.node.height > 0 && __layout(__lab.node.height);
+}, 0);
+} catch (__fitErr) {
+cc.error && cc.error("alertSelectFit layout error: " + __fitErr);
+}
+});
+};
+// 进度条：和家具建造(ItemBuildDetail.progressAni)、开箱(BoxProgress)一样 1.35 秒，期间暂停游戏时间、置 isProgressing、播 loading 音效；
+// 弹窗用 PanelAlert（自带全屏遮罩），条是从 Prefabs/World/Fight/BoxProgress 里摘出来的 progressBar 节点（400 宽）。
+// __work 在进度走完时执行（扣料/推进时间都在这之后，和原版一致），返回值作为完成后的提示文字
+window.__campProgress = function(__title, __msg, __work) {
+var __MS = 1350;
+var __fallback = function() {
+var __txt = __work();
+HYCommon.alert(__title, __txt, "好的");
+};
+dy.loader.loadRes("Prefabs/Widget/PanelAlert", cc.Prefab, function(__e1, __pf) {
+if (__e1 || !__pf) return __fallback();
+var __pn = cc.instantiate(__pf), __pc = __pn.getComponent("PanelAlert");
+__pc.init(__title, __msg, "好的");
+__pc.btnBack.node.active = !1;
+dy.theRoot.node.parent.addChild(__pn, 100);
+HYTime.pause();
+HYData.cache.isProgressing = !0;
+dy.audio.playEffect("loading");
+var __bar = null, __t0 = Date.now(), __ended = !1;
+var __tick = function() {
+var __p = (Date.now() - __t0) / __MS;
+__bar && (__bar.progress = Math.min(1, __p));
+if (__p < 1 || __ended) return;
+__ended = !0;
+__pc.unschedule(__tick);
+var __txt;
+try {
+__txt = __work();
+} finally {
+HYTime.resume();
+HYData.cache.isProgressing = !1;
+}
+__bar && (__bar.node.active = !1);
+__pc.labMsg.string = __txt;
+__pc.btnBack.node.active = !0;
+};
+__pc.schedule(__tick, 0);
+dy.loader.loadRes("Prefabs/World/Fight/BoxProgress", cc.Prefab, function(__e2, __bp) {
+if (__e2 || !__bp || __ended || !cc.isValid(__pn)) return;
+// 只取条，不让 BoxProgress 组件本身进场景（它的 update 会自己推进时间并回调）
+var __tmp = cc.instantiate(__bp), __bn = __tmp.getChildByName("progressBar");
+if (__bn) {
+__bn.removeFromParent(!1);
+__bn.x = 0;
+__bn.y = -130;
+__pc.labMsg.node.parent.addChild(__bn);
+__bar = __bn.getComponent(cc.ProgressBar);
+__bar.progress = Math.min(1, (Date.now() - __t0) / __MS);
+}
+__tmp.destroy();
+});
+});
+};
+// 建造本体：材料先从存放点扣，不够再扣背包；推进 6 小时；存放点剩下的东西搬进新仓库
+window.__campDoBuild = function(__pot, __st) {
+var __use = {};
+for (var __k in __camp.RECIPE) {
+var __need = __camp.RECIPE[__k], __fromSt = Math.min(parseInt(__st[__k]) || 0, __need);
+__fromSt > 0 && (__use[__k] = -__fromSt);
+__need - __fromSt > 0 && HYBag.updateAttr(__k, -(__need - __fromSt));
+}
+HYWorld.updateStorage(__pot, __use, !0);
+var __left = __campClone(HYWorld.getStorage(__pot));
+for (var __lk in __left) (parseInt(__left[__lk]) || 0) <= 0 && delete __left[__lk];
+HYData.set("core.world.pot." + __pot + ".STORAGE", {});
+HYData.set("core.campSnaps." + __pot, {
+builds: window.__campFreshBuilds(),
+warehouse: __left,
+buffs: {}
+});
+HYData.set("core.world.pot." + __pot + ".BUILT", 1);
+HYTime.update(HYTime.UT_COLLECT, __camp.BUILD_SEC);
+HYData.trySave();
+dy.notify.post(dy.K_REFRESH_POT_NODE);
+dy.notify.post(dy.K_UPDATE_BAG);
+};
+// 到达面板：没建成显示"存放"+"建造营地"(借用世界之门那颗按钮)，建成后只显示"进入营地"
+window.__campArrivalUI = function(__panel, __pot) {
+var __nm = __panel.btnNewMap && __panel.btnNewMap.node, __lb = __nm && __nm.getComponentInChildren(cc.Label);
+__lb && null == __panel.__newMapText && (__panel.__newMapText = __lb.string);
+if (!window.__campIsSecretPot(__pot)) {
+__lb && null != __panel.__newMapText && (__lb.string = __panel.__newMapText);
+return;
+}
+if (window.__campIsBuilt(__pot)) return;
+__panel.btnHome.node.active = !1;
+__panel.btnNewMap.node.active = !0;
+__panel.btnNewMap.node.x = 145;
+__lb && (__lb.string = "建造营地");
+__panel.btnStorage.node.active = !0;
+__panel.picRed && (__panel.picRed.node.active = HYWorld.getStorageCnt(__pot) > 0);
+};
+// 进入营地前：切换到要进的营地（主营地切回 "0"）
+window.__campBeforeGoHome = function(__pot) {
+if (!window.__OPT.secretCamp && !window.__campIsSecret()) return;
+window.__campSwitch(window.__campIsSecretPot(__pot) && window.__campIsBuilt(__pot) ? __pot : "0");
+};
+// ===== 野兽暴动兽巢 =====
+// 生存满 5 天后，地图上同一时间只有一个兽巢（18 处空地之一，避开所有关卡和常驻点；只在附近云已散开的空地刷新）。
+// 打完且存放点领空 → 消失，3 天后在另一处刷新。组合按地形标签从 75 种里抽（一种组合可出现在多个地形）。
+// 兽巢是普通关卡（TYPE 101）：进度/存放点/"没打完不消失"全走原版；M_STAGE 按存档里的波次表现场生成（fetchPotProfile 覆盖），
+// 每波 HARD 由 tryGotoDungeon 传给 PanelFightMonster（原版关卡写死 1），PEN（破甲：每次攻击无视 5~10 防御）走 FightProgress 的 options。箱子用沉船的 R_STAGE（掉落 2202）。
+// 存档：core.beastDen = {active, last, seq, endDay, startDay, waves:[[档位, 组合键, 倍率, 封面怪ID]]}；core.world.pot.<id> = 原版关卡数据
+// 每组合每档倍率由 scripts\den_pool_v2.py 自动定（满强化石锤+长弓+草裙、带破甲，目标掉血 热身0~15/中档20~40/硬仗45~80/首领90~130）：
+// 倍率 = HARD × 天数倍率，HARD = 倍率 / 1.4（按 201 天+ 折算）
+var __mpf = a.mProfiles["Profiles/monster_profile"], __cmpf = a.mProfiles["Profiles/c_monster_profile"];
+// 挑战独有的 9 只注册进普通怪物表（普通模式兽巢也要刷）
+__mpf && __cmpf && [ "1057", "1058", "1059", "1060", "1061", "1062", "1063", "1064", "1065" ].forEach(function(__mid) {
+!__mpf[__mid] && __cmpf[__mid] && (__mpf[__mid] = JSON.parse(JSON.stringify(__cmpf[__mid])));
+});
+// 配置由 scripts\gen_den_config.py 生成：C[键] = [名字, 出场顺序(前排在前), 掉落表, 地形标签, {档位: 倍率}]；SPOTS[id] = {n, e, p, tags}
+var __den = window.__DEN = {"GATE_DAY":5,"COOLDOWN":3,"PEN":[5,10],"CLOUD_R":110,"TIER_D":{"w":"7","m":"10","h":"13","b":"15"},"C":{"sheep":["羊群",[1033,1033,1033,1033,1033,1033],1701,"草雪",{"w":1.4}],"cubs":["幼狼群",[1001,1001,1001,1001,1001,1001],101,"草林山",{"w":1.4}],"piglets":["小野猪群",[1008,1008,1008,1008,1009,1009],201,"草林河",{"w":1.4}],"turkey":["火鸡与瘦狼",[1050,1050,1050,1002,1002,1002],2,"草林",{"w":1.4}],"hyena":["鬣狗群与野猪王",[1057,1057,1057,1057,1057,1011],106,"草山沙",{"w":1.4}],"dizzybear":["暴躁熊群",[1059,1059,1059,1059,1059,1017],401,"山林",{"w":1.4,"m":2.05,"h":2.2,"b":2.48}],"sandscorp":["沙蛇与毒蝎",[1022,1022,1065,1065,1065,1065],206,"沙",{"w":1.4}],"scorpsea":["毒蝎群",[1065,1065,1065,1065,1065,1065],206,"沙洞",{"w":1.4}],"shark8":["鲨鱼群",[1032,1032,1031,1031,1031,1031,1031,1031],2201,"海",{"w":1.4,"m":1.73,"h":2.0,"b":2.53}],"shark10":["大鲨鱼群",[1032,1032,1032,1031,1031,1031,1031,1031,1031,1031],2201,"海",{"w":1.4,"m":1.62,"h":1.72,"b":1.91}],"snakes":["水蟒与毒蛇",[1021,1021,1021,1058,1058,1058],206,"水河洞",{"w":1.4,"m":2.12,"h":2.4,"b":2.6}],"strangebat":["奇怪的蝙蝠群",[1049,1049,1049,1049,1049,1049],8011,"洞林",{"w":1.4}],"bats":["蝙蝠群",[1047,1047,1047,1047,1047,1047],8011,"洞",{"w":1.4}],"batqueen":["蝙蝠王后与护卫",[1047,1047,1047,1047,1041],8007,"洞",{"w":1.4}],"underriver":["地下河怪鱼",[1044,1044,1044,1042],8002,"水洞河",{"w":1.4,"m":2.45,"h":2.6}],"rj":["罗密欧与朱丽叶",[1078,1079],0,"水河林草",{"w":1.4}],"turtlegor":["鳄龟与猩猩",[1060,1062],1302,"河林",{"w":1.4,"m":2.1}],"turtle2gor":["双鳄龟与猩猩",[1060,1060,1062],1302,"河林",{"w":1.4,"m":1.89,"h":2.59}],"sheepwolf":["羊群掩护的狼群",[1033,1033,1006,1006,1006,1016],1702,"雪草",{"w":1.4,"m":2.15,"h":2.42}],"bearwolf":["白熊与雪狼",[1016,1016,1006,1006,1006,1006],1703,"雪",{"w":1.4,"m":1.55,"h":1.86,"b":1.96}],"hippocroc":["河马与鳄鱼",[1063,1018,1018,1019,1019],1006,"水河",{"w":1.4,"m":1.54,"h":1.82,"b":2.07}],"ironcroc":["铁嘴黑鳄鱼",[1019,1019,1019,1020],1006,"水河",{"w":1.4,"m":1.9,"h":2.11,"b":2.3}],"turtlefish":["鳄龟与食人鱼",[1060,1012,1012,1012,1012,1013],702,"水河",{"w":1.0,"m":1.91,"h":2.35}],"fodgor":["炮灰与猩猩",[1050,1002,1002,1062,1062],1302,"林",{"w":1.0,"m":1.5,"h":1.95,"b":2.5}],"cannpatrol":["食人族巡逻队",[1028,1028,1028,1029],1503,"人林",{"w":1.4,"m":1.52,"h":1.93}],"webcave":["蛛网洞穴",[1046,1046,1047,1047,1048,1048],8010,"洞",{"w":1.4,"m":1.66,"h":2.0,"b":2.6}],"lemurs":["狐猴群",[1045,1045,1066,1066,1066],8004,"林山",{"w":1.0,"m":1.5,"h":1.73,"b":2.16}],"batfamily":["蝠王一家",[1047,1047,1047,1041,1040],8008,"洞",{"w":1.4,"m":1.68,"h":2.18,"b":2.57}],"batpair":["蝠王夫妇",[1041,1040],8008,"洞",{"w":1.4,"m":1.93,"h":2.3}],"turtle2gor2":["双鳄龟与双猩猩",[1060,1060,1062,1062],1302,"河林",{"w":1.0,"m":1.4,"h":1.8,"b":2.1}],"turtle3gor3":["鳄龟猩猩大军",[1060,1060,1060,1062,1062,1062],1302,"河林",{"m":1.05,"h":1.3,"b":1.7}],"boargor":["野猪王与猩猩",[1011,1062,1062],1302,"林草",{"w":1.0,"m":1.4,"h":1.81,"b":2.18}],"hippofish":["河马与吸血鬼鱼",[1063,1013,1013,1013,1013],1006,"水",{"w":1.0,"m":1.74,"h":2.2,"b":2.37}],"wolffox":["健壮的狼与狐狸",[1007,1064,1064,1064],901,"山林雪",{"w":1.0,"m":1.3,"h":1.58,"b":2.0}],"lizscorp":["蜥蜴与毒蝎",[1035,1036,1065,1065],2109,"沙洞",{"w":1.4,"m":1.7,"h":2.23,"b":2.55}],"snakenest":["毒蛇窝",[1058,1058,1058,1024],1301,"林洞",{"w":1.0,"m":1.58,"h":2.02,"b":2.6}],"leopardfox":["豹与狐狸",[1061,1064,1064],1601,"沙山",{"w":1.0,"m":1.23,"h":1.58,"b":1.92}],"tigers":["虎王与斑纹虎",[1027,1026,1026],902,"林山",{"m":1.18,"h":1.57,"b":1.82}],"macaque":["洞魈群",[1048,1048,1048,1048,1047,1047],8013,"洞山",{"m":1.0,"h":1.53,"b":1.64}],"guards":["食人族首领亲卫",[1051,1051,1030],2103,"人",{"w":1.0,"m":1.2,"h":1.63,"b":1.96}],"tribe":["食人族部落",[1028,1028,1029,1029,1051,1030],1503,"人",{"h":1.03,"b":1.18}],"lizcann":["蜥蜴开路的食人族",[1035,1035,1028,1028,1029],2109,"人洞沙",{"m":1.15,"h":1.49,"b":1.66}],"apetribe":["驯猿部落",[1028,1028,1029,1062,1062],1503,"人林",{"m":1.2,"h":1.5,"b":1.8}],"pirates4":["海盗小队",[1038,1038,1038,1039],2103,"海",{"w":1.0,"m":1.15,"h":1.47,"b":1.65}],"pirates6":["海盗登岸",[1038,1038,1038,1038,1039,1039],2103,"海",{"h":1.0,"b":1.1}],"sharkpirate":["鲨鱼开道的海盗",[1031,1031,1031,1038,1038,1039],2103,"海",{"w":1.0,"m":1.22,"h":1.51,"b":1.63}],"wolfboar":["野猪与饿狼",[1009,1009,1003,1003,1003],901,"草林山",{"w":1.4,"m":2.2}],"bearpack":["熊群",[1014,1014,1015,1015,1016],1703,"山雪林",{"w":1.4,"m":2.51}],"snaketiger":["毒蛇与猛虎",[1023,1023,1025,1025],1302,"林",{"w":1.4,"m":1.67,"h":2.15,"b":2.35}],"lemurape":["狐猴与猩猩",[1045,1045,1062,1062],1302,"林山",{"w":1.0,"m":1.3,"h":1.67,"b":1.98}],"turtlecroc":["鳄龟与鳄鱼",[1060,1060,1018,1018],1006,"水河",{"w":1.4,"m":2.1,"h":2.55}],"hippoanaconda":["河马与水蟒",[1063,1021,1021,1021],502,"水河",{"w":1.4,"m":2.55}],"lizleopard":["蜥蜴护豹",[1035,1035,1061],1601,"沙洞",{"m":1.13,"h":1.59,"b":1.75}],"sandfox":["沙蛇与狐狸",[1022,1022,1022,1064,1064],901,"沙",{"w":1.0,"m":1.43,"h":1.62,"b":2.17}],"kingape":["熊王与猩猩",[1017,1062,1062],1302,"山林",{"w":1.0,"m":1.6,"h":1.91,"b":2.41}],"snowfox":["白熊与狐狸",[1016,1064,1064,1064],901,"雪山",{"w":1.0,"m":1.42,"h":1.83,"b":2.3}],"sheepleopard":["羊群掩护的豹",[1033,1033,1033,1061],1601,"草山",{"w":1.0,"m":1.67,"h":2.22,"b":2.45}],"turkeytiger":["火鸡掩护的虎王",[1050,1050,1050,1027],902,"草林",{"w":1.4,"m":2.22,"h":2.38,"b":2.6}],"batsnake":["蝙蝠与毒蛇",[1047,1047,1047,1058,1058],206,"洞林",{"w":1.4}],"spiderscorp":["蜘蛛与毒蝎",[1046,1046,1046,1065,1065,1065],206,"洞沙",{"w":1.4}],"macaqueape":["洞魈与猩猩",[1048,1048,1062,1062],1302,"洞林",{"w":1.0,"m":1.4,"h":1.73,"b":2.1}],"hyenawolf":["鬣狗与饿狼",[1057,1057,1057,1003,1003,1003],901,"草沙",{"w":1.4,"m":2.0,"h":2.6}],"cannwolf":["驯狼的食人族",[1028,1028,1005,1005,1005],1601,"人林山",{"w":1.4,"m":2.02,"h":2.12,"b":2.2}],"piratefish":["海盗与食人鱼",[1012,1012,1012,1038,1038],2103,"海河",{"w":1.4,"m":2.6}],"boarking":["野猪王与小猪",[1008,1008,1008,1008,1011],201,"草林",{"w":1.4}],"strongwolf":["健壮的狼领凶狼",[1007,1005,1005,1005,1005],1601,"山沙",{"w":1.0,"m":1.74,"h":2.03,"b":2.18}],"tigerlemur":["狐猴掩护的斑纹虎",[1066,1066,1066,1026],1302,"林",{"w":1.0,"m":1.5,"h":1.95,"b":2.18}],"lizpair":["蜥蜴群",[1035,1035,1036,1036],2109,"沙洞",{"m":1.0,"h":1.19,"b":1.57}],"whiteshark":["大白鲨群",[1032,1032,1032,1032],2201,"海",{"w":1.4,"m":2.47,"h":2.6}],"vampfish":["吸血鬼鱼群",[1013,1013,1013,1013,1013],12803,"水河",{"w":1.4,"m":2.3,"h":2.43,"b":2.57}],"hippoturtle":["河马与鳄龟",[1063,1060,1060,1012,1012],1201,"水",{"w":1.4,"m":1.95,"h":2.42}],"foxpack":["狐狸群",[1064,1064,1064,1064,1064],901,"山林雪",{"w":1.0,"m":1.23,"h":1.37,"b":1.92}],"snowsheep":["雪狼与羊群",[1033,1033,1033,1033,1006,1006],1702,"雪草",{"w":1.4,"m":2.6}],"wildboar":["暴怒野猪群",[1010,1010,1010,1010,1011],701,"林草河",{"w":1.4,"m":2.27,"h":2.5}],"pythons":["蛇群",[1021,1021,1023,1023,1024],502,"水洞林",{"w":1.0,"m":1.48,"h":1.78,"b":2.22}]},"SPOTS":{"9201":{"n":"林中暗流东","e":"East Hidden Stream","p":{"x":248,"y":-120},"tags":"林河"},"9202":{"n":"灌木丛西","e":"West Shrubland","p":{"x":-264,"y":-320},"tags":"草林"},"9203":{"n":"黑暗囚室北","e":"North of the Dark Prison","p":{"x":300,"y":412},"tags":"人山雪"},"9204":{"n":"瀑布","e":"Waterfall","p":{"x":48,"y":-420},"tags":"水河"},"9205":{"n":"海岸","e":"Coast","p":{"x":124,"y":-512},"tags":"海草"},"9206":{"n":"松木林东","e":"East Pine Forest","p":{"x":300,"y":-12},"tags":"林山"},"9207":{"n":"溶洞西","e":"West Cavern","p":{"x":-308,"y":-432},"tags":"洞"},"9208":{"n":"雪原","e":"Snowfield","p":{"x":128,"y":424},"tags":"雪山"},"9209":{"n":"雨林","e":"Rainforest","p":{"x":276,"y":-244},"tags":"林"},"9210":{"n":"竹林","e":"Bamboo Forest","p":{"x":-252,"y":16},"tags":"林草"},"9211":{"n":"洞窟","e":"Cave","p":{"x":308,"y":208},"tags":"人洞"},"9212":{"n":"沉船外海","e":"Off the Shipwreck","p":{"x":164,"y":-580},"tags":"海水"},"9213":{"n":"湖泊北岸","e":"North Lakeshore","p":{"x":28,"y":72},"tags":"水河"},"9214":{"n":"林中空地","e":"Forest Clearing","p":{"x":-100,"y":-176},"tags":"草林"},"9215":{"n":"荒漠","e":"Desert","p":{"x":-116,"y":412},"tags":"沙山"},"9216":{"n":"山脉","e":"Mountains","p":{"x":-204,"y":140},"tags":"山"},"9217":{"n":"绿洲","e":"Oasis","p":{"x":-304,"y":440},"tags":"沙水"},"9218":{"n":"丘陵","e":"Hills","p":{"x":-4,"y":116},"tags":"山草"}}};
+var __denBox = a.mProfiles["Profiles/pot_profile"] && a.mProfiles["Profiles/pot_profile"]["3001"],__denBoxStage = __denBox && __denBox.R_STAGE && __denBox.R_STAGE["1"] ? JSON.parse(JSON.stringify(__denBox.R_STAGE["1"][0])) : {
+NAME: {
+cn: "箱子",
+en: "Box",
+tw: "箱子"
+},
+PIC: "Texture/Monster/1211",
+OPEN_WAYS: [ "0", "4100#4100_1", "4112#4112_1#4127#4129" ],
+DROP_ID: 2202,
+DESC: {
+cn: "一只人工制造的木箱",
+en: "A wooden crate",
+tw: "一只人工制造的木箱"
+},
+DESC1: {
+cn: "努力开启中...",
+en: "Opening",
+tw: "努力開啟中..."
+},
+DESC2: {
+cn: "你成功开启了箱子",
+en: "You successfully open the box",
+tw: "你成功開啟了箱子"
+}
+};
+[ "Profiles/pot_profile", "Profiles/c_pot_profile" ].forEach(function(__pk) {
+var __pt = a.mProfiles[__pk];
+__pt && Object.keys(__den.SPOTS).forEach(function(__did) {
+var __s = __den.SPOTS[__did];
+__pt[__did] || (__pt[__did] = {
+ID: __did,
+NAME: {
+cn: __s.n + "兽巢",
+en: __s.e + " Beast Den",
+tw: __s.n + "獸巢"
+},
+TYPE: "101",
+DESC: {
+cn: "野兽在这里聚集、暴动。一波接一波地冲出来，深处还压着几只从沉船上冲上岸的箱子。全部击退并把东西搬空后，兽群会散去，几天后在别处重新聚集。",
+en: "Beasts gather and riot here, wave after wave, with a few crates from the shipwreck buried deep inside. Clear them all and empty the den, and the herd scatters, regrouping elsewhere a few days later.",
+tw: "野獸在這裡聚集、暴動。一波接一波地衝出來，深處還壓著幾隻從沉船上衝上岸的箱子。全部擊退並把東西搬空後，獸群會散去，幾天後在別處重新聚集。"
+},
+ICON: "pi_5001",
+PIC: "Texture/World/pdi_5001",
+BEAST_DEN: 1,
+ISCHECK: 0,
+M_STAGE: [],
+R_STAGE: [ __denBoxStage ],
+UNLOCK: []
+});
+});
+});
+// 一波的关卡配置（原版 M_STAGE 格式 + HARD + PEN）。波次 = [档位, 组合键, 倍率, 封面怪ID]；
+// v75 存档的旧格式 [档位, "键@倍率"] 也兼容：倍率取该组合该档的值，没有就按档位默认
+window.__denStage = function(__w) {
+var __pt = String(__w[1]).split("@"), __c = __den.C[__pt[0]];
+if (!__c) return null;
+var __tb = __c[4] || {}, __m = +__w[2] || +__pt[1] || __tb[__w[0]] || {
+w: 1.4,
+m: 1.8,
+h: 2.2,
+b: 2.2
+}[__w[0]] || 1.4, __nm = __c[0], __pic = __w[3] || __c[1][__c[1].length - 1];
+return {
+NAME: {
+cn: __nm,
+en: __nm,
+tw: __nm
+},
+PIC: "Texture/Monster/" + __pic,
+MONSTER: __c[1].slice(),
+DANGER: __den.TIER_D[__w[0]] || "10",
+DROP_ID: __c[2],
+HARD: Math.round(__m / 1.4 * 100) / 100,
+PEN: __den.PEN,
+DESC: {
+cn: "兽巢深处一阵骚动，" + __nm + "冲了出来！",
+en: "Something stirs deep in the den: " + __nm + " charge out!",
+tw: "獸巢深處一陣騷動，" + __nm + "衝了出來！"
+},
+DESC1: {
+cn: "",
+en: "",
+tw: ""
+},
+DESC2: {
+cn: "你击退了" + __nm + "。",
+en: "You drove off " + __nm + ".",
+tw: "你擊退了" + __nm + "。"
+}
+};
+};
+// 某地形标签、某档位可抽的组合：标签有交集且该组合有这一档的倍率；万一为空就退到所有有这一档的组合
+window.__denPool = function(__tags, __t) {
+var __all = Object.keys(__den.C).filter(function(__k) {
+return null != __den.C[__k][4][__t];
+}), __hit = __all.filter(function(__k) {
+for (var __i = 0; __i < __tags.length; __i++) if (__den.C[__k][3].indexOf(__tags[__i]) >= 0) return !0;
+return !1;
+});
+return __hit.length ? __hit : __all;
+};
+// 生成一个兽巢：8~10 波（热身 2~3 → 中档 → 硬仗 → 首领），3~4 个箱子（每 2~3 波出一次，可能连出两个，最后一次在首领之后）
+window.__denBuild = function(__id) {
+var __s = __den.SPOTS[__id], __R = function(__a, __b) {
+return __a + Math.floor(Math.random() * (__b - __a + 1));
+};
+var __N = __R(8, 10), __W = __R(2, 3), __rest = __N - 1 - __W, __M = Math.ceil(__rest / 2), __H = __rest - __M, __waves = [], __used = {};
+[ [ "w", __W ], [ "m", __M ], [ "h", __H ], [ "b", 1 ] ].forEach(function(__tc) {
+var __list = window.__denPool(__s.tags, __tc[0]);
+for (var __i = 0; __i < __tc[1]; __i++) {
+// 一个兽巢里尽量不重复组合
+var __cand = __list.filter(function(__x) {
+return !__used[__x];
+});
+// 池子抽完才允许重复，但罗密欧与朱丽叶（rj）一个兽巢里最多出现一次
+__cand.length || (__cand = __list.filter(function(__x) {
+return "rj" != __x || !__used[__x];
+}));
+__cand.length || (__cand = __list);
+var __k = __cand[Math.floor(Math.random() * __cand.length)], __ids = __den.C[__k][1], __uniq = __ids.filter(function(__x, __xi) {
+return __ids.indexOf(__x) == __xi;
+});
+__used[__k] = 1;
+__waves.push([ __tc[0], __k, __den.C[__k][4][__tc[0]], __uniq[Math.floor(Math.random() * __uniq.length)] ]);
+}
+});
+// 箱子：B 个分成 E 次出现（4 个时一半概率是 3 次、其中一次连出两个）。把 N 波切成 E 段：第一段 2~4 波（含热身），之后每段 2~3 波，
+// 每段打完出这次的箱子，最后一段的终点就是首领之后
+var __B = __R(3, 4), __E = 4 == __B && Math.random() < .5 ? 4 : 3, __gaps = [], __cap = [], __rem = __N - 2 * __E, __after = {}, __series = [];
+for (var __i = 0; __i < __E; __i++) {
+__gaps.push(2);
+__cap.push(0 == __i ? 4 : 3);
+}
+for (;__rem > 0; ) {
+var __can = [];
+for (__i = 0; __i < __E; __i++) __gaps[__i] < __cap[__i] && __can.push(__i);
+if (!__can.length) break;
+__gaps[__can[Math.floor(Math.random() * __can.length)]]++;
+__rem--;
+}
+__gaps[0] += __rem;
+var __dbl = __B > __E ? Math.floor(Math.random() * __E) : -1;
+for (var __pos = 0, __i = 0; __i < __E; __i++) {
+__pos += __gaps[__i];
+__after[__pos] = __i == __dbl ? 2 : 1;
+}
+for (__i = 0; __i < __N; __i++) {
+__series.push({
+type: "monster",
+index: __i
+});
+for (var __j = 0; __j < (__after[__i + 1] || 0); __j++) __series.push({
+type: "box",
+index: 0
+});
+}
+return {
+waves: __waves,
+series: __series
+};
+};
+window.__denFillProfile = function(__id, __p) {
+var __st = HYData.get("core.beastDen");
+__p.M_STAGE = __st && __st.active == __id && __st.waves ? __st.waves.map(window.__denStage) : [];
+};
+window.__denGate = function() {
+return HYTime.day() >= __den.GATE_DAY;
+};
+// 空地附近（CLOUD_R 内）的云都已散开才算开放：云的规则同 WorldForCloud.refreshAreaMisty（关联点任一已显示或已通关）。
+// AREA_POS 在 WorldForArea.initData 里记下；还没进过地图（不知道云）就先不刷新
+window.__denSpotOpen = function(__id) {
+var __ap = __den.AREA_POS, __p = __den.SPOTS[__id].p;
+if (!__ap) return !1;
+for (var __ck in __ap) {
+var __c = __ap[__ck];
+if (!__c || !__c.p || Math.sqrt(Math.pow(__c.p.x - __p.x, 2) + Math.pow(__c.p.y - __p.y, 2)) > __den.CLOUD_R) continue;
+for (var __ok = !1, __i = 0; __i < (__c.ids || []).length && !__ok; __i++) __ok = HYWorld.isPotShow(__c.ids[__i]) || HYWorld.isPotPass(__c.ids[__i]);
+if (!__ok) return !1;
+}
+return !0;
+};
+window.__denSpawn = function(__st) {
+var __ids = Object.keys(__den.SPOTS).filter(function(__x) {
+return __x != __st.last && window.__denSpotOpen(__x);
+});
+if (!__ids.length) return;
+var __id = __ids[Math.floor(Math.random() * __ids.length)], __L = window.__denBuild(__id);
+HYData.set("core.world.pot." + __id, {
+SHOW: 1,
+REACH: 0,
+STORAGE: {},
+SERIES: __L.series,
+SUDDEN: 0
+});
+HYData.set("core.beastDen", {
+active: __id,
+last: __st.last || "",
+seq: (__st.seq || 0) + 1,
+startDay: HYTime.day(),
+waves: __L.waves
+});
+};
+// 结算状态：打完且存放点领空 → 结束并记日子；冷却满 3 天且生存满 5 天 → 在已探索的空地刷新下一个
+window.__denTick = function() {
+if (!window.__OPT.beastDen || __den.busy) return;
+__den.busy = 1;
+try {
+var __st = HYData.get("core.beastDen") || {}, __today = HYTime.day();
+if (__st.active) {
+var __d = HYData.get("core.world.pot." + __st.active);
+if (!__d || !__d.SERIES || __d.REACH >= __d.SERIES.length && HYWorld.getStorageCnt(__st.active) <= 0) {
+HYData.set("core.beastDen", {
+active: "",
+last: __st.active,
+seq: __st.seq || 0,
+endDay: __today
+});
+__st = HYData.get("core.beastDen");
+}
+}
+!__st.active && (null == __st.endDay || __today - __st.endDay >= __den.COOLDOWN) && window.__denGate() && window.__denSpawn(__st);
+} catch (__denErr) {
+cc.error && cc.error("beast den tick error: " + __denErr);
+} finally {
+__den.busy = 0;
+}
+};
+window.__denShow = function(__id) {
+if (!window.__OPT.beastDen) return !1;
+window.__denTick();
+var __st = HYData.get("core.beastDen");
+if (!__st || __st.active != String(__id)) return !1;
+var __d = HYData.get("core.world.pot." + __id);
+return !!__d && !!__d.SERIES && !(__d.REACH >= __d.SERIES.length && HYWorld.getStorageCnt(__id) <= 0);
+};
 a._verifyProduct();
 }
 t && t(e);
@@ -7355,6 +8383,8 @@ t.tWidgetAd.init(dy.config.AD_TYPE.COERCE_AC);
 layoutUI: function() {
 var t = this;
 HYCommon.savePoint(null, 4);
+// 秘密营地：仓库那一栏标题被分类按钮占满，容量放在背包标题栏中间（左"背包"、右负重）
+window.__campWareLabel && t.weight && window.__campWareLabel(t, t.weight.node.parent, 0, 0, new cc.Color(255, 255, 255), 26, t.weight);
 if ("100301" == HYData.get("core.roleSkin")) {
 t.nodFat.active = 1;
 t.sprFatProgress.width = 186 * (100 + ~~HYData.get("core.broEnergy")) / 200;
@@ -7514,6 +8544,10 @@ HYWarehouse.updateAttr(t, -a);
 },
 updateItem: function(e, t) {
 var a = this;
+if (!e && window.__campWareFullFor && window.__campWareFullFor(t, 1)) {
+HYCommon.toast("秘密营地仓库已满（" + window.__CAMP.CAP + "）", 1.5);
+return;
+}
 if (!a.isMoving) {
 a.isMoving = 1;
 var n = {}, i = {};
@@ -11752,6 +12786,7 @@ return t;
 },
 updateAttr: function(e, t) {
 var a = this;
+window.__f2g && (e = window.__f2g(e, t));
 if (e) if ("object" == ("undefined" == typeof e ? "undefined" : n(e))) for (var i in e) {
 var o = "core.bag." + i, r = HYData.get(o);
 r = r ? r + e[i] : e[i];
@@ -11866,6 +12901,7 @@ if (o && HYTime.timeline() - o > dy.profile.getById("Profiles/buff_profile", i.B
 return !1;
 },
 isLock: function(e) {
+if (window.__campLockBuild && window.__campLockBuild(e)) return !0;
 var t = "core.builds." + e + ".LOCK";
 if (0 == HYData.get(t)) return !1;
 var a = dy.profile.getById("Profiles/build_profile", e);
@@ -11883,10 +12919,19 @@ o[r].LEVEL > i && (n = !1);
 return n;
 },
 updateDuration: function(e, t) {
+// 秘密营地家具耐久消耗减半（奇数时随机取整，保持整数）
+var __half = window.__campIsSecret && window.__campIsSecret() ? function(__d) {
+if (!(__d < 0)) return __d;
+var __h = __d / 2;
+return __h % 1 ? Math.random() < .5 ? Math.floor(__h) : Math.ceil(__h) : __h;
+} : function(__d) {
+return __d;
+};
+"object" != ("undefined" == typeof e ? "undefined" : n(e)) && (t = __half(t));
 if ("object" == ("undefined" == typeof e ? "undefined" : n(e))) for (var a in e) {
 i = "core.builds." + a + ".DURATION";
 if ("MAX" != (o = HYData.get(i) || 0)) {
-o += e[a];
+o += __half(e[a]);
 o = Math.max(o, 0);
 o = Math.min(o, HYData.get("core.builds." + a + ".DURATION_MAX"));
 HYData.set(i, o);
@@ -14430,6 +15475,10 @@ window.__OPT.robot && [ "1", "101", "102", "103", "104", "105", "106", "107", "2
 (HYData.get("base.robot.formula." + __rid) || 0) < 1 && HYData.set("base.robot.formula." + __rid, 1);
 });
 if (window.__OPT.talents) for (var __tid = 2001; __tid <= 2023; __tid++) HYData.get("base.unlock.talent." + __tid) || HYData.set("base.unlock.talent." + __tid, 1);
+// 图纸 34~49：与神秘人抽中/商城购买一致，只写 base.shop 标记（配方 COND 1023/1031、求生册、成就、抽奖 locked 都读它）
+window.__OPT.blueprints && (window.__OPT.bpList || []).forEach(function(__bp) {
+HYData.get("base.shop." + __bp) || HYData.set("base.shop." + __bp, 1);
+});
 try {
 // 永久包：114 月卡 / 115 武器 / 116 食物 / 117 材料 / 118 医疗，只看 base.shop 标记
 window.__OPT.shop && [ "114", "115", "116", "117", "118" ].forEach(function(__sid) {
@@ -15063,8 +16112,9 @@ HYAchieve.add(2, 1, 1);
 HYPet.hasPet(HYPet.PT_WOLF) && HYAchieve.add(2, 5, 1);
 this._tryAddTalent(t);
 if (!HYPlayer.isDying()) {
-this._tryTriggerMonsterTide();
-this._tryTriggerMonsterAtk();
+// 人在秘密营地：兽潮暂停（秘密营地不会被野兽找到）；夜袭照样判定和结算主营地
+window.__campIsSecret && window.__campIsSecret() || this._tryTriggerMonsterTide();
+window.__campRunAs ? window.__campRunAs("0", this._tryTriggerMonsterAtk.bind(this)) : this._tryTriggerMonsterAtk();
 }
 HYCommon.shareUpdate(t);
 HYChallenge.isChallenge() && HYStat.add(HYData.get("base.challenge.diff"), "t001", 1);
@@ -15687,6 +16737,7 @@ for (var i = 0; i < t.length && 1 != t[i].state; ++i) ;
 return i == t.length || 0 != n && a >= n;
 },
 _updateMonster: function(e, t, a) {
+a && a.pen && (e.PEN = a.pen);
 e.POISON = e.POISON || 0;
 e.DIZZINESS = e.DIZZINESS || 0;
 e.FROZEN = e.FROZEN || 0;
@@ -15750,6 +16801,7 @@ this.env[2008] && e.weapon.BOOM && (e.weapon.BOOM.atk += this.env[2008]);
 this.env[2009] && e.weapon.REMOTE && (e.weapon.REMOTE.atk += this.env[2009]);
 if (this.env[2010] && e.weapon.REMOTE) {
 e.weapon.CLOSE && (e.weapon.CLOSE.atk += this.env[2010]);
+e.weapon.OFFHAND && (e.weapon.OFFHAND.atk += this.env[2010]);
 e.weapon.BASE.atk += this.env[2010];
 }
 e.anti_injury_rate += this._getRateByLevel(e.anti_injury_rate_level);
@@ -15766,6 +16818,7 @@ e.isInjury ? e.atk_reduce = -.5 : e.atk_reduce = 0;
 e.weapon.BASE.hit += e.hit_rate;
 e.weapon.CLOSE && (e.weapon.CLOSE.hit += e.hit_rate);
 e.weapon.REMOTE && (e.weapon.REMOTE.hit += e.hit_rate);
+e.weapon.OFFHAND && (e.weapon.OFFHAND.hit += e.hit_rate);
 },
 _getAtk: function(e, t, a, n) {
 var i = this._calbyObj(e);
@@ -16047,6 +17100,17 @@ type: "ATK_PLAYER_CLOSE",
 priority: h,
 speed: h
 });
+// 机关剑副手：独立的近战轨道，速度按近战形态 + 近战类攻速 buff 算（和 CLOSE 同一公式），不占远程轮次
+if (e.weapon.OFFHAND) {
+d = this.mBattleBuff.propList(e.weapon.OFFHAND, "atkSp");
+var __ohSp = (e.weapon.OFFHAND.spd + d[0]) * (1 + this.buff.atk_spd + this.env[2006] + d[1]);
+__ohSp *= (1 + d[2]) * (1 + d[3]);
+s.insert({
+type: "ATK_PLAYER_OFFHAND",
+priority: __ohSp,
+speed: __ohSp
+});
+}
 if (e.pet) {
 var f = HYPet.getAtkSpd(HYPet.PT_WOLF);
 s.insert({
@@ -16083,6 +17147,10 @@ for (var y in s.skipType) if (s.skipType[y]) {
 switch (y) {
 case this.ATK_PLAYER_CLOSE:
 e.weapon.CLOSE ? this._atk_close(e, t, a, n) && (s.skipType[y] = 0) : this._atk_base(e, t, a, n) && (s.skipType[y] = 0);
+break;
+
+case "ATK_PLAYER_OFFHAND":
+this._atk_offhand(e, t, a, n) && (s.skipType[y] = 0);
 }
 if (this._fightEnd(e, n, r, o)) break;
 }
@@ -16099,6 +17167,10 @@ break;
 
 case this.ATK_PLAYER_CLOSE:
 e.weapon.CLOSE ? this._atk_close(e, t, a, n) || (s.skipType[S.type] = 1) : this._atk_base(e, t, a, n) || (s.skipType[S.type] = 1);
+break;
+
+case "ATK_PLAYER_OFFHAND":
+this._atk_offhand(e, t, a, n) || (s.skipType[S.type] = 1);
 break;
 
 case this.ATK_PET:
@@ -16584,6 +17656,21 @@ _atk_close: function(e, t, a, n) {
 this._fightPlayerPoisonAtk(e, t, a, n, "close");
 if (!this._fightEnd(e, n, 0, 0)) return this._fightPlayerCloseAtk(e, t, a, n);
 },
+// 机关剑副手轨道：有箭时远程位在射箭，这一轮空过；没箭时临时把 CLOSE 换成 OFFHAND 走原版近战。
+// 返回值语义同 _atk_close：false = 够不着，由 skipType 冻结这条轨道，怪一进射程立刻出手（不丢轮次）
+_atk_offhand: function(e, t, a, n) {
+var i = e.weapon;
+if (!i.OFFHAND || !i.REMOTE) return !0;
+for (var __k in i.REMOTE.arrows) if (i.REMOTE.arrows[__k].count) return !0;
+var __bak = i.CLOSE;
+i.CLOSE = i.OFFHAND;
+try {
+// 有真近战武器时，"close" 中毒跳伤由它的轨道结算，这里不重复跳；空手时由副手轨道结算
+return __bak ? this._fightEnd(e, n, 0, 0) ? !0 : this._fightPlayerCloseAtk(e, t, a, n) : this._atk_close(e, t, a, n);
+} finally {
+i.CLOSE = __bak;
+}
+},
 _fightPlayerCloseAtk: function(e, t, a, n) {
 var i = e.weapon, o = this._fightChooseGoal(n);
 if (!o) return !0;
@@ -17054,6 +18141,7 @@ S[1] && t.push({
 type: "trigger_text",
 desc: S[1]
 });
+o.PEN && (y = Math.max(0, y - this._random(o.PEN[0], o.PEN[1])));
 h = (h = g - y) <= 0 ? 1 : h;
 _.desc = dy.world_fight_desc_profile.bite;
 var v = this.mBattleBuff.getProp(e.resist_hit_critical, 0, e.weapon.DODGE, "antiCrit", o), T = this.mBattleTriggerBuff.getProp(v, 0, e.weapon.DODGE, "antiCrit", o);
@@ -17355,6 +18443,7 @@ _updatebuff: function(e) {
 e.atk += this.buff.atk;
 e.weapon.BASE.hit += this.buff.hitClose;
 e.weapon.CLOSE && (e.weapon.CLOSE.hit += this.buff.hitClose);
+e.weapon.OFFHAND && (e.weapon.OFFHAND.hit += this.buff.hitClose);
 e.weapon.REMOTE && (e.weapon.REMOTE.hit += this.buff.hitRemote);
 },
 _random: function(e, t) {
@@ -18816,6 +19905,7 @@ var e = HYData.get("core.role.7040");
 HYPlayer.hasBag() && (e += dy.config.LOAD_ADDITION_FOR_BAG);
 HYPlayer.hasPumpkinBag() && (e += dy.config.LOAD_ADDITION_FOR_PUMPKIN_BAG);
 HYData.get("core.isCreateBag") && (e += dy.config.LOAD_ADDITION_FOR_CREATE);
+window.__OPT.camel && HYPlayer.hasCamel() && (e += 20);
 return e;
 },
 isInDark: function() {
@@ -18990,6 +20080,38 @@ dizziness1_level: s.E_ATTRS.PLUGIN ? s.E_ATTRS.PLUGIN.dizziness1_level || 0 : 0,
 frozen_level: s.E_ATTRS.PLUGIN ? s.E_ATTRS.PLUGIN.frozen_level || 0 : 0,
 vampire_level: s.E_ATTRS.PLUGIN ? s.E_ATTRS.PLUGIN.vampire_level || 0 : 0,
 atkMode: "remote"
+};
+}
+// 机关剑放在远程位且没箭时，按近战形态(E_ATTRS_2)当副手：远程轮到出手时改打一次近战（见 _fightPlayerRemoteAtk）
+var __ohId = HYEquip.getEquip("1"), __oh = window.__OPT.offhand && __ohId && "4145" == String(__ohId).split("_")[0] ? dy.profile.cloneById("Profiles/item_profile", __ohId) : null;
+if (__oh && __oh.E_ATTRS_2) {
+var __oa = __oh.E_ATTRS_2;
+this._updateLevel(e, __oa.PLUGIN);
+o.OFFHAND = {
+id: __ohId,
+name: __oh.NAME,
+type: "1",
+atk: t[7013] + __oa.ATK,
+hit: t[7016] - a + HYAchieve.effect(2, __ohId),
+hit_rate_level: __oa.PLUGIN ? __oa.PLUGIN.hit_rate_level || 0 : 0,
+sputter_range: __oa.SPUTTER_RANGE || 0,
+sputter_max: __oa.SPUTTER_MAX || 1,
+dis: __oa.DIS + r,
+spd: __oa.SPD,
+cold: __oa.SPD,
+duration: HYEquip.getDuration(__ohId),
+audio: __oh.AUDIO,
+crit: __oa.CRIT || 0,
+repel: __oa.repel || 0,
+repel1: __oa.repel1 || 0,
+vampire_value: __oa.VAMPIRE_VALUE || 0,
+panic_level: __oa.PLUGIN ? __oa.PLUGIN.panic_level || 0 : 0,
+poison_level: __oa.PLUGIN ? __oa.PLUGIN.poison_level || 0 : 0,
+dizziness_level: __oa.PLUGIN ? __oa.PLUGIN.dizziness_level || 0 : 0,
+dizziness1_level: __oa.PLUGIN ? __oa.PLUGIN.dizziness1_level || 0 : 0,
+frozen_level: __oa.PLUGIN ? __oa.PLUGIN.frozen_level || 0 : 0,
+vampire_level: __oa.PLUGIN ? __oa.PLUGIN.vampire_level || 0 : 0,
+atkMode: "close"
 };
 }
 var l = dy.profile.cloneById("Profiles/item_profile", HYEquip.getEquip("3"));
@@ -22102,6 +23224,7 @@ return e ? dy.utils.countItemProperty(e) : 0;
 },
 updateAttr: function(e, t) {
 var a = this;
+window.__f2g && (e = window.__f2g(e, t));
 if (e) if ("object" == ("undefined" == typeof e ? "undefined" : n(e))) for (var i in e) {
 var o = "core.warehouse." + i, r = HYData.get(o);
 r = r ? r + e[i] : e[i];
@@ -22127,14 +23250,25 @@ return 0;
 return n;
 },
 unloadBag: function() {
-var e = HYData.get("core.bag");
+var e = HYData.get("core.bag"), __left = window.__campWareLeft ? window.__campWareLeft() : 1 / 0, __kept = !1;
 for (var t in e) {
 var a = dy.profile.getById("Profiles/item_profile", t);
 if (a && !a.E_TYPE && "4107" != t && "4123" != t && "4068" != t && "4126" != t) {
-HYWarehouse.updateAttr(t, HYData.get("core.bag." + t));
+var __cnt = HYData.get("core.bag." + t), __w = window.__campItemWeight ? window.__campItemWeight(t) : parseFloat(a.WEIGHT) || 0;
+if (__left !== 1 / 0 && __w > 0) {
+var __fit = Math.max(0, Math.min(__cnt, Math.floor(__left / __w)));
+if (__fit < __cnt) {
+__kept = !0;
+__fit > 0 && (HYWarehouse.updateAttr(t, __fit), HYBag.updateAttr(t, -__fit), __left -= __fit * __w);
+continue;
+}
+__left -= __cnt * __w;
+}
+HYWarehouse.updateAttr(t, __cnt);
 HYData.clear("core.bag." + t);
 }
 }
+__kept && HYCommon.toast("秘密营地仓库已满（" + window.__CAMP.CAP + "），放不下的留在背包里", 2);
 },
 _checkImage: function(e, t) {
 if (!t) return !1;
@@ -22188,6 +23322,8 @@ var a = this.fetchPotProfile(e);
 if (!a) return !1;
 var i = a.MAP_CODE || n.MAP_CODE.LEVEL_ZERO;
 if (MapManager.getInstance().getCurrentMapCode() != i) return !1;
+if (null != a.SECRET_CAMP) return !!window.__campPotShow && window.__campPotShow(e);
+if (a.BEAST_DEN) return !!window.__denShow && window.__denShow(e);
 if (a.TYPE == c.PT_HOME) return !0;
 var o = this.fetchPotData(e);
 if (a.TYPE == c.PT_NPC_WOLF || a.TYPE == c.PT_NPC_CAMEL || a.TYPE == c.PT_NPC_BARB) return o.SHOW;
@@ -22299,7 +23435,7 @@ return a.TYPE == c.PT_CAVE;
 },
 isPotUnlock: function(e) {
 var t = this.fetchPotProfile(e);
-if (t) return t.TYPE == c.PT_HOME || this._checkUnlock(e);
+if (t) return null != t.SECRET_CAMP ? !!window.__campPotShow && window.__campPotShow(e) : t.TYPE == c.PT_HOME || this._checkUnlock(e);
 },
 refreshPotsShow: function() {
 var e = HYCommon.getProfile("getAll", "Profiles/pot_profile");
@@ -22352,7 +23488,9 @@ if (v < T || v > b) return !1;
 return !0;
 },
 fetchPotProfile: function(e) {
-return HYCommon.getProfile("cloneById", "Profiles/pot_profile", e);
+var __pp = HYCommon.getProfile("cloneById", "Profiles/pot_profile", e);
+__pp && __pp.BEAST_DEN && window.__denFillProfile && window.__denFillProfile(String(e), __pp);
+return __pp;
 },
 initPotData: function() {
 var e = this, t = HYData.get("core.world.pot") || {};
@@ -22436,6 +23574,10 @@ a.SUDDEN = 0;
 } else if (t.TYPE == c.PT_WORLD_DOOR) {
 (a = {}).STORAGE = {};
 a.SHOW = 0;
+} else if (null != t.SECRET_CAMP) {
+(a = {}).STORAGE = {};
+a.SHOW = 0;
+a.BUILT = 0;
 }
 HYData.set("core.world.pot." + e, a);
 }
@@ -23278,6 +24420,10 @@ HYAchieve.add(3, 8, 1);
 getStorage: function(e) {
 var t = this.fetchPotData(e), a = this.fetchPotProfile(e);
 if (a.TYPE == c.PT_DUNGEON || a.TYPE == c.PT_COLLECTION || a.TYPE == c.PT_DEX_SHIP || a.TYPE == c.PT_CIMELIA || a.TYPE == c.PT_CAVE || a.TYPE == c.PT_WORLD_DOOR) return t.STORAGE;
+if (null != a.SECRET_CAMP) {
+t.STORAGE || (t.STORAGE = {}, this.updatePotData(e, t));
+return t.STORAGE;
+}
 },
 getStorageCnt: function(e) {
 var t = 0, a = this.getStorage(e);
@@ -23537,11 +24683,13 @@ o = o - o % 3600 + 3599;
 for (var u = 0; u < r; u++) {
 o += 3600;
 for (var s in i.STAGE) {
-var _ = HYData.get("core.world.pot.{0}.STAGE.{1}.CNT".format(a, s)), h = HYData.get("core.world.pot.{0}.STAGE.{1}.TIME".format(a, s)), f = n.STAGE[s], m = 3600 * f.COLD;
+var _ = HYData.get("core.world.pot.{0}.STAGE.{1}.CNT".format(a, s)), h = HYData.get("core.world.pot.{0}.STAGE.{1}.TIME".format(a, s)), f = n.STAGE[s];
+if (!f) continue;
+var m = 3600 * f.COLD;
 HYChallenge.getDiff() && (m = Math.floor(m * HYChallenge.getDiff().recycleIni));
 if (_ < 1) {
 if (o - h < m) continue;
-HYData.set("core.world.pot.{0}.STAGE.{1}.CNT".format(a, s), f.RAW_CNT);
+HYData.set("core.world.pot.{0}.STAGE.{1}.CNT".format(a, s), null != f.REFILL_CNT ? f.REFILL_CNT : f.RAW_CNT);
 HYData.set("core.world.pot.{0}.STAGE.{1}.TIME".format(a, s), h + m);
 } else {
 if (this._passHours(h, o) <= 0) continue;
@@ -23580,7 +24728,7 @@ var h = 3600 * d.COLD;
 HYChallenge.getDiff() && (h = Math.floor(h * HYChallenge.getDiff().recycleIni));
 if (u < 1) {
 if (i - _ < h) continue;
-HYData.set("core.world.pot.{0}.STAGE.{1}.CNT".format(e, r), d.RAW_CNT);
+HYData.set("core.world.pot.{0}.STAGE.{1}.CNT".format(e, r), null != d.REFILL_CNT ? d.REFILL_CNT : d.RAW_CNT);
 HYData.set("core.world.pot.{0}.STAGE.{1}.TIME".format(e, r), _ + h);
 } else {
 if (Math.floor((i - _) / 3600) <= 0) continue;
@@ -25354,7 +26502,9 @@ return !1;
 checkIsMax: function() {
 var e = this;
 e.setDesc();
-e.mBuildProfile[parseInt(e.mBuildData.LEVEL) + 1] || !e.mBuildData.DURATION ? e.checkBuildState() : e.showMaxType();
+var __nx = e.mBuildProfile[parseInt(e.mBuildData.LEVEL) + 1];
+parseInt(e.mBuildData.LEVEL) > 0 && window.__levelLocked && window.__levelLocked(__nx) && (__nx = null);
+__nx || !e.mBuildData.DURATION ? e.checkBuildState() : e.showMaxType();
 e.setItemIcon();
 e.setTitle();
 },
@@ -25408,6 +26558,9 @@ showMaxType: function() {
 var e = this;
 e.nodMaterial.active = !1;
 e.labMaxText.node.active = !0;
+null == e.__maxTextOrig && (e.__maxTextOrig = e.labMaxText.string);
+var __tip = window.__levelLockTip && parseInt(e.mBuildData.LEVEL) > 0 ? window.__levelLockTip(e.mBuildProfile[parseInt(e.mBuildData.LEVEL) + 1]) : null;
+e.labMaxText.string = __tip ? __tip[dy.cache.language] || __tip.cn : e.__maxTextOrig;
 e.nodProgress.active = !1;
 e.btnOperate.node.active = !1;
 e.labTimeText.node.active = !1;
@@ -27847,6 +29000,10 @@ if (e.productObj.BRANCH) {
 var t = e.productObj.BRANCH[0], a = e.mBuildProfile[t];
 e.labMaxText.string = dy.i18n.t("S_49") + a.NAME[dy.cache.language];
 } else e.labMaxText.string = dy.i18n.t("S_50");
+if (e.productObj.LOCK_TIP) {
+var __plv = e.mBuildProfile && e.mBuildProfile[String(e.productObj.LEVEL)], __ptip = __plv && __plv.EXCLUDE_ROLE && __plv.EXCLUDE_ROLE.indexOf(String(HYData.get("core.role.ID"))) >= 0 && e.productObj.ROLE_TIP || e.productObj.LOCK_TIP;
+e.labMaxText.string = __ptip[dy.cache.language] || __ptip.cn;
+}
 if ("3008" == e.buildId) {
 e.nodTimeBox.active = !1;
 e.labTitle.string = dy.i18n.t("S_51");
@@ -28012,6 +29169,8 @@ HYTime.resume();
 },
 checkConsume: function() {
 var e = this, t = !0;
+window.__vegSync && window.__vegSync(e);
+e.__vegUsed = !!(window.__VEG && e.buildConsume && e.buildConsume[window.__VEG.ITEM] > 0);
 for (var a in e.buildConsume) t = "3002_1" == e.buildId ? HYBag.giveItemCnt(a, e.buildConsume[a]) : HYCommon.giveItemCntAll(a, e.buildConsume[a]);
 return t;
 },
@@ -28112,7 +29271,7 @@ if (a) {
 var r = {};
 r[o] = 1;
 HYData.get("core.isExploring") ? HYBag.updateAttr(r) : HYWarehouse.updateAttr(r);
-var c = dy.profile.getById("Profiles/item_profile", o);
+var c = dy.profile.getById("Profiles/item_profile", window.__f2g ? window.__f2g(o, 1) : o);
 HYCommon.toast(dy.i18n.t("S_300110") + c.NAME[dy.cache.language], 2);
 }
 },
@@ -28126,9 +29285,10 @@ a = HYAchieve.effect(5);
 n = t[7064] ? t[7064] : 0;
 a = 0;
 }
-var c = 5 + a + n;
+var c = 5 + a + n, __vegUsed = !!e.__vegUsed;
 HYActivities.getBuildDouble(function(t) {
 c *= 1 + ~~t;
+__vegUsed && "food" == o.TYPE && (c = Math.max(c, 50));
 if (("food" == o.TYPE || "tool" == o.TYPE) && i < c) {
 var a = {};
 for (var n in e.productObj.ITEMS) {
@@ -28215,6 +29375,7 @@ return !0;
 }, this);
 },
 updateItemsLayout: function() {
+window.__vegSync && window.__vegSync(this);
 var e = this, t = e.nodMaterial.children, a = 0, n = 0;
 e.needComsume = {};
 for (var i = 0; i < t.length; i++) t[i].opacity = 0;
@@ -29564,6 +30725,26 @@ o = t.weather;
 var u = HYNature.weather();
 r.ICON = String.format("weather_{0}", u.NAME);
 r.STATE = n[u.NAME];
+}
+// 点开顶部状态图标时显示 当前/上限（上限编号与 PanelMainHeader.mStateItems 的 keyMax 一致）
+try {
+var __stKeys = {
+ItemInsomnia: [ "7001", "7045" ],
+ItemTrauma: [ "7004", "7046" ],
+ItemInfection: [ "7005", "7047" ],
+ItemHunger: [ "7006", "7048" ],
+ItemMental: [ "7000", "7044" ],
+ItemLife: [ "7003", "7002" ]
+}[e];
+if (window.__OPT.attr && __stKeys) {
+var __stCur = Math.floor(+HYData.get("core.role." + __stKeys[0]) || 0), __stMax = Math.round(+HYData.get("core.role." + __stKeys[1]) || 0);
+// 失眠值越高越差，和顶部进度条（1 - 当前/上限）一致，显示成 上限-当前
+"ItemInsomnia" == e && (__stCur = Math.max(0, __stMax - __stCur));
+var __stTxt = __stCur + "/" + __stMax;
+r.STATE = "ItemLife" == e ? __stTxt : r.STATE + "  " + __stTxt;
+}
+} catch (__stErr) {
+cc.error && cc.error("state value error: " + __stErr);
 }
 r.NAME = o.NAME;
 r.DESC = o.DESC;
@@ -32532,6 +33713,7 @@ i.potProgress.node.active = !0;
 i.potStorage.node.active = !0;
 i.resetLayout();
 }
+window.__campArrivalUI && window.__campArrivalUI(i, a);
 i._use();
 },
 resetLayout: function() {
@@ -36159,6 +37341,10 @@ var t = {};
 t.monster = this.mParam.stage.MONSTER;
 t.fightType = e("GameDefine").FIGHT_TYPE.FT_NORMAL;
 t.hard = this.mParam.hard ? this.mParam.hard : 1;
+// 兽巢野兽破甲：通过 options 传给 HYFight.fight → _updateMonster
+this.mParam.stage.PEN && (t.options = {
+pen: this.mParam.stage.PEN
+});
 this.createPrefab("FightProgress", t, null, dy.utils.delegate(this, this.onFightEnd));
 },
 onFightEnd: function(e) {
@@ -40785,6 +41971,56 @@ if (e.nodMailTip && e.nodMailTip.parent) e.nodMailTip.parent.active = false;
 } catch (__hideErr) {
 cc.error && cc.error("header hide mail/active error: " + __hideErr);
 }
+// 特殊道具：每次注入（grantTok 不同）只发一封邮件；成功后把令牌记在本机 localStorage，失败则下次进主界面重试
+try {
+var __grant = window.__OPT.consumables ? window.__OPT.grant || [] : [], __gTok = window.__OPT.grantTok || "", __gKey = "__inj_grant_tok";
+var __gDone = "";
+try {
+__gDone = cc.sys.localStorage.getItem(__gKey) || "";
+} catch (__lsErr) {}
+if (__grant.length && __gTok && __gDone != __gTok && dy.cache.uid && !window.__grantSending) {
+var __goods = {};
+__grant.forEach(function(__it) {
+var __left = ~~__it.n, __ids = __it.ids || [];
+// USEMAX 按物品 ID 各自计数：只发有效数量 = 上限 - 已吃次数 - 背包/仓库里已有的，超出部分不发
+for (var __gi = 0; __gi < __ids.length && __left > 0; __gi++) {
+var __gid = __ids[__gi], __gpf = dy.profile.getById("Profiles/item_profile", __gid);
+if (!__gpf) continue;
+var __held = 0;
+try {
+__held = ~~HYCommon.getItemCntAll(__gid);
+} catch (__heldErr) {}
+var __room = Math.max(0, ~~__gpf.USEMAX - ~~HYData.get("base.speItem." + __gid) - __held);
+var __give = Math.min(__left, __room);
+if (__give > 0) {
+__goods[__gid] = (__goods[__gid] || 0) + __give;
+__left -= __give;
+}
+}
+});
+var __gStr = Object.keys(__goods).map(function(__k) {
+return __k + ":" + __goods[__k];
+}).join(";");
+if (__gStr) {
+window.__grantSending = 1;
+HYCommon.addMail("注入器补给", "", __gStr, null, "dalao", dy.cache.uid, dy.i18n.t("S_200079"), null, null, function(__r) {
+window.__grantSending = 0;
+if ("succ" != __r) return;
+try {
+cc.sys.localStorage.setItem(__gKey, __gTok);
+} catch (__lsErr2) {}
+dy.cache.mailInfo && (dy.cache.mailInfo.lastResp = null);
+dy.theMainHeader && dy.theMainHeader.checkMail && dy.theMainHeader.checkMail();
+HYCommon.toast("注入器补给已发到邮箱", 2);
+}, "isIgnore", 0);
+} else try {
+cc.sys.localStorage.setItem(__gKey, __gTok);
+} catch (__lsErr3) {}
+}
+} catch (__grantErr) {
+window.__grantSending = 0;
+cc.error && cc.error("consumable grant error: " + __grantErr);
+}
 dy.notify.regObserver(e, e.onNotify, dy.K_UPDATE_TIME);
 dy.notify.regObserver(e, e.onNotify, dy.K_UPDATE_STATE);
 dy.notify.regObserver(e, e.onNotify, dy.K_UPDATE_TEMPERATURE);
@@ -41959,6 +43195,16 @@ dy.notify.post(dy.K_MONSTER_ATK_END);
 this.mOnCloseEvent && this.mOnCloseEvent();
 },
 _layoutUI: function() {
+if (window.__campIsSecret && window.__campIsSecret() && !this.__campWrapped) {
+var __self = this;
+__self.__campWrapped = 1;
+window.__campRunAs("0", function() {
+__self._layoutUI();
+});
+__self.__campWrapped = 0;
+__self.labDesc.string = "【主营地】" + __self.labDesc.string;
+return;
+}
 var e = dy.i18n.t("S_560"), t = dy.i18n.t("S_561"), a = dy.i18n.t("S_562"), n = this;
 if (n.mAttacked) if (HYPet.isDefending(HYPet.PT_WOLF)) {
 var i = 0 - dy.config.PET_DEFEND_HUNGER_DELTA, o = 0 - dy.config.PET_DEFEND_ROYAL_DELTA;
@@ -46208,7 +47454,47 @@ __lines.push("防御：" + __show(HYPlayer.getDef(), __calc(HYPlayer.getDef(), _
 __lines.push("闪避：" + __show(HYPlayer.getMiss(), __calc(HYPlayer.getMiss(), __oD, "dodge"), "%"));
 __lines.push("体温：" + HYPlayer.getBodyTemp().toFixed(1) + "°");
 __lines.push("（数值为战斗中数值，不含对特定敌人生效的加成）");
-HYCommon.alert("属性", __lines.join("\n"), "确定");
+var __txt = __lines.join("\n");
+// PanelAlert 的 LabelMsg 是 400x200 + SHRINK，14 行会被压到十几号字；这里改成按内容撑高
+dy.loader.loadRes("Prefabs/Widget/PanelAlert", cc.Prefab, function(__le, __pf) {
+if (__le || !__pf) {
+HYCommon.alert("属性", __txt, "确定");
+return;
+}
+var __pn = cc.instantiate(__pf), __pc = __pn.getComponent("PanelAlert");
+__pc.init("属性", __txt, "确定");
+dy.theRoot.node.parent.addChild(__pn, 100);
+try {
+var __lab = __pc.labMsg, __core = __lab.node.parent, __bg = __core.getChildByName("Sprite"), __btn = __core.getChildByName("Button"), __tt = __pc.labTitle.node;
+var __fs = 24, __lh = 32, __lw = 430;
+__lab.overflow = cc.Label.Overflow.RESIZE_HEIGHT;
+__lab.horizontalAlign = cc.Label.HorizontalAlign.LEFT;
+__lab.enableWrapText = !0;
+__lab.fontSize = __fs;
+__lab.lineHeight = __lh;
+__lab.node.width = __lw;
+// 原布局（背景 493 高）：标题距顶 71.5，正文顶距顶 109.5，正文底到按钮顶 53，按钮高 96，按钮底距底 34.5
+var __layout = function(__h) {
+var __bh = Math.max(493, __h + 293), __top = __bh / 2;
+__bg && (__bg.height = __bh);
+__tt.y = __top - 71.5;
+__lab.node.y = __top - 109.5;
+__btn && (__btn.y = __top - 109.5 - __h - 53 - 48);
+};
+var __rows = 0;
+__txt.split("\n").forEach(function(__ln) {
+for (var __u = 0, __ci = 0; __ci < __ln.length; __ci++) __u += __ln.charCodeAt(__ci) > 255 ? 1 : .55;
+__rows += Math.max(1, Math.ceil(__u * __fs / __lw));
+});
+__layout(__rows * __lh);
+// 估算只是为了首帧不跳，下一帧按 Label 实际撑开的高度再排一次
+__pc.scheduleOnce(function() {
+__lab.node.height > 0 && __layout(__lab.node.height);
+}, 0);
+} catch (__alErr) {
+cc.error && cc.error("attr alert layout error: " + __alErr);
+}
+});
 });
 }
 } catch (__settingsShortcutErr) {
@@ -50260,7 +51546,8 @@ HYCommon.loadGamePanels(function() {
 for (var t = HYData.get("core.fallstory.PASS.s4"), a = HYData.get("core.fallstory.FOR_RPIMARY") || [], n = 0; n < a.length; ++n) {
 var i = a[n];
 if (i && ("Ag" == i.ID && i.STATE.indexOf("END") >= 0 || 1 == t)) {
-var o = HYData.get("core.world.startPot") || "0", r = HYData.get("core.isExploring") || "0" != o ? MapManager.getInstance().getSceneMap() : "Home";
+var o = HYData.get("core.world.startPot") || "0", r = HYData.get("core.isExploring") || !(window.__campIsHomePot ? window.__campIsHomePot(o) : "0" == o) ? MapManager.getInstance().getSceneMap() : "Home";
+"Home" == r && window.__campBeforeGoHome && window.__campBeforeGoHome(o);
 HYCommon.transitionTo(r, 1, !0);
 return;
 }
@@ -52814,6 +54101,11 @@ this.mWorldMap = null;
 this.mIsFirst = !0;
 },
 onLoad: function() {
+try {
+window.__campIsSecret && window.__campIsSecret() && window.__campSwitch("0");
+} catch (__ce) {
+cc.error && cc.error("camp switch back error: " + __ce);
+}
 HYData.set("core.isExploring", !0);
 dy.resolution.init(720, 1280);
 HYCommon.savePoint(null, 999);
@@ -53201,7 +54493,15 @@ dy.notify.post(dy.K_ROLE_RESUME_MOVE);
 }, {
 key: "_onChangeWeather",
 value: function(e, t, a) {
-HYNature.isVile(a.WT_OLD) && HYBuild.damageForVileWeather();
+if (HYNature.isVile(a.WT_OLD)) {
+HYBuild.damageForVileWeather();
+// 恶劣天气对所有营地生效：当前没加载的营地也各结算一次（秘密营地照样减半）
+window.__campBuiltIds && [ "0" ].concat(window.__campBuiltIds()).forEach(function(__cid) {
+__cid != window.__campActive() && window.__campRunAs(__cid, function() {
+HYBuild.damageForVileWeather();
+});
+});
+}
 }
 }, {
 key: "_onTryShowLastWords",
@@ -54052,6 +55352,11 @@ Kg: 0
 this.liList = [];
 this.stopPropagation();
 this.addLi();
+// 秘密营地：列表下方（列表底 -322 与返回按钮顶 -386 之间）显示容量
+var __wh = this, __core = this.node.getChildByName("LayerCore"), __bk = __core && __core.getChildByName("Button");
+window.__campWareLabel && window.__campWareLabel(this, __core, 0, -354, new cc.Color(0, 0, 0), 26, __bk && __bk.getComponentInChildren(cc.Label), function() {
+return __wh.nodWarehouse.node.active;
+});
 },
 stopPropagation: function() {
 var e = this.bg && this.bg.node;
@@ -54430,6 +55735,17 @@ initData: function() {
 this.layHeader();
 var e = HYData.get("core.startOption.CAMP_POS");
 i[0].p = i[0].p_opt[e];
+window.__DEN && (window.__DEN.AREA_POS = n.AREA_POS);
+window.__DEN && Object.keys(window.__DEN.SPOTS).forEach(function(__did) {
+i[__did] || (i[__did] = {
+p: window.__DEN.SPOTS[__did].p
+});
+});
+window.__CAMP && window.__CAMP.IDS.forEach(function(__cid, __ci) {
+i[0].p_opt[__ci] && (i[__cid] ? i[__cid].p = i[0].p_opt[__ci] : i[__cid] = {
+p: i[0].p_opt[__ci]
+});
+});
 },
 layHeader: function() {
 var e = this.sprPlayer;
@@ -54656,6 +55972,7 @@ t.onAreaPotArrived(t.moveEndPot);
 },
 onAreaPotArrived: function(t) {
 var a = this;
+window.__vegOnArrive && window.__vegOnArrive(HYData.get("core.world.startPot"), t);
 HYData.set("core.world.startPot", t);
 MapManager.getInstance().setCurrentArea();
 HYData.cache.currentPot = t;
@@ -54787,13 +56104,14 @@ dy.notify.post(dy.K_TRY_GOTO_SHIP, c);
 break;
 
 case n.ACTION_TYPE.TAG_GOTO_HOME:
+window.__campBeforeGoHome && window.__campBeforeGoHome(i);
 HYWarehouse.unloadBag();
 HYData.set("core.isExploring", !1);
 HYCommon.transitionTo("Home", 1);
 break;
 
 case n.ACTION_TYPE.TAG_GOTO_NEW_MAP:
-a._gotoNewMap(i);
+window.__campIsSecretPot && window.__campIsSecretPot(i) ? window.__campBuildFlow(i) : a._gotoNewMap(i);
 }
 },
 _gotoNewMap: function(e) {
@@ -54887,6 +56205,7 @@ c.name = i.NAME;
 c.process = n.REACH + 1 + "/" + n.SERIES.length;
 if ("monster" == r.type) {
 c.stage = i.M_STAGE[r.index];
+c.stage && c.stage.HARD && (c.hard = c.stage.HARD);
 t.createView("PanelFightMonster", c, o);
 } else if ("box" == r.type) {
 c.stage = i.R_STAGE[r.index];

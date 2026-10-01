@@ -93,18 +93,28 @@ public class MainActivity extends Activity implements LogBus.Listener {
         LinearLayout optBox = new LinearLayout(this);
         optBox.setOrientation(LinearLayout.VERTICAL);
         for (final String[] it : com.hyqs.injector.patch.Options.ITEMS) {
+            if (com.hyqs.injector.patch.Options.isAlwaysOn(it[0])) continue;
             android.widget.CheckBox cb = new android.widget.CheckBox(this);
             cb.setText(it[1] + "  —  " + it[2]);
             cb.setTextSize(12);
             cb.setChecked(com.hyqs.injector.patch.Options.get(this, it[0], "1".equals(it[3])));
+            optBox.addView(cb);
+            // 解锁图纸 / 特殊道具：勾上后展开子列表
+            final View sub = "blueprints".equals(it[0]) ? buildBlueprintPanel(pad)
+                    : "consumables".equals(it[0]) ? buildConsumablePanel(pad) : null;
+            if (sub != null) {
+                sub.setVisibility(cb.isChecked() ? View.VISIBLE : View.GONE);
+                optBox.addView(sub);
+            }
             cb.setOnCheckedChangeListener(new android.widget.CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(android.widget.CompoundButton b, boolean v) {
                     com.hyqs.injector.patch.Options.set(MainActivity.this, it[0], v);
+                    if (sub != null) sub.setVisibility(v ? View.VISIBLE : View.GONE);
                 }
             });
-            optBox.addView(cb);
         }
+        optBox.addView(buildAlwaysOnPanel(pad));
         ScrollView optScroll = new ScrollView(this);
         optScroll.addView(optBox);
         root.addView(optScroll, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1.2f));
@@ -139,6 +149,137 @@ public class MainActivity extends Activity implements LogBus.Listener {
         for (String l : LogBus.snapshot()) sb.append(l).append('\n');
         logView.setText(sb.toString());
         refreshStatus();
+    }
+
+    /** 默认优化：始终开启，折叠成一行，点开是只读清单（不能取消） */
+    private View buildAlwaysOnPanel(int pad) {
+        LinearLayout panel = new LinearLayout(this);
+        panel.setOrientation(LinearLayout.VERTICAL);
+        panel.setPadding(0, pad / 2, 0, pad / 2);
+        StringBuilder sb = new StringBuilder();
+        int n = 0;
+        for (String[] it : com.hyqs.injector.patch.Options.ITEMS) {
+            if (!com.hyqs.injector.patch.Options.isAlwaysOn(it[0])) continue;
+            sb.append(sb.length() > 0 ? "\n" : "").append("· ").append(it[1]).append("  —  ").append(it[2]);
+            n++;
+        }
+        final String collapsed = "▸ 默认优化 " + n + " 项（始终开启，点击查看）";
+        final String expanded = "▾ 默认优化 " + n + " 项（始终开启，点击收起）";
+        final TextView head = new TextView(this);
+        head.setText(collapsed);
+        head.setTextSize(13);
+        head.setTextColor(Color.rgb(0x33, 0x66, 0x99));
+        head.setPadding(0, pad / 4, 0, pad / 4);
+        final TextView body = new TextView(this);
+        body.setText(sb.toString());
+        body.setTextSize(12);
+        body.setTextColor(Color.DKGRAY);
+        body.setPadding(pad, 0, 0, 0);
+        body.setVisibility(View.GONE);
+        head.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                boolean show = body.getVisibility() != View.VISIBLE;
+                body.setVisibility(show ? View.VISIBLE : View.GONE);
+                head.setText(show ? expanded : collapsed);
+            }
+        });
+        panel.addView(head);
+        panel.addView(body);
+        return panel;
+    }
+
+    /** 图纸子列表，两列排布，缩进在父选项下面 */
+    private View buildBlueprintPanel(int pad) {
+        LinearLayout panel = new LinearLayout(this);
+        panel.setOrientation(LinearLayout.VERTICAL);
+        panel.setPadding(pad * 2, 0, 0, pad / 2);
+        String[][] bps = com.hyqs.injector.patch.Options.BLUEPRINTS;
+        final List<android.widget.CheckBox> boxes = new ArrayList<>();
+        final Button all = new Button(this);
+        all.setTextSize(12);
+        all.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                boolean allOn = true;
+                for (android.widget.CheckBox b : boxes) allOn &= b.isChecked();
+                for (android.widget.CheckBox b : boxes) b.setChecked(!allOn); // 会触发各自的监听器保存
+                all.setText(allOn ? "全选" : "全不选");
+            }
+        });
+        panel.addView(all, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        LinearLayout line = null;
+        for (int i = 0; i < bps.length; i++) {
+            if (i % 2 == 0) {
+                line = new LinearLayout(this);
+                line.setOrientation(LinearLayout.HORIZONTAL);
+                panel.addView(line);
+            }
+            final String key = com.hyqs.injector.patch.Options.bpKey(bps[i][0]);
+            android.widget.CheckBox cb = new android.widget.CheckBox(this);
+            cb.setText(bps[i][1]);
+            cb.setTextSize(12);
+            cb.setChecked(com.hyqs.injector.patch.Options.get(this, key, false));
+            cb.setOnCheckedChangeListener(new android.widget.CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(android.widget.CompoundButton b, boolean v) {
+                    com.hyqs.injector.patch.Options.set(MainActivity.this, key, v);
+                    boolean on = true;
+                    for (android.widget.CheckBox x : boxes) on &= x.isChecked();
+                    all.setText(on ? "全不选" : "全选");
+                }
+            });
+            line.addView(cb, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+            boxes.add(cb);
+        }
+        boolean allOn = true;
+        for (android.widget.CheckBox b : boxes) allOn &= b.isChecked();
+        all.setText(allOn ? "全不选" : "全选");
+        return panel;
+    }
+
+    /** 特殊道具子列表：每行 名称 + 数量输入框，0 表示不发 */
+    private View buildConsumablePanel(int pad) {
+        LinearLayout panel = new LinearLayout(this);
+        panel.setOrientation(LinearLayout.VERTICAL);
+        panel.setPadding(pad * 2, 0, 0, pad / 2);
+        for (final String[] it : com.hyqs.injector.patch.Options.CONSUMABLES) {
+            LinearLayout line = new LinearLayout(this);
+            line.setOrientation(LinearLayout.HORIZONTAL);
+            line.setGravity(Gravity.CENTER_VERTICAL);
+            TextView name = new TextView(this);
+            name.setText(it[1]);
+            name.setTextSize(12);
+            line.addView(name, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+            android.widget.EditText num = new android.widget.EditText(this);
+            num.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
+            num.setTextSize(12);
+            num.setEms(3);
+            num.setGravity(Gravity.CENTER);
+            num.setText(String.valueOf(com.hyqs.injector.patch.Options.getCount(this, it[0])));
+            num.addTextChangedListener(new android.text.TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int a, int b, int c) {
+                }
+
+                @Override
+                public void onTextChanged(CharSequence s, int a, int b, int c) {
+                }
+
+                @Override
+                public void afterTextChanged(android.text.Editable s) {
+                    int v = 0;
+                    try {
+                        v = Integer.parseInt(s.toString().trim());
+                    } catch (NumberFormatException ignored) {
+                    }
+                    com.hyqs.injector.patch.Options.setCount(MainActivity.this, it[0], v);
+                }
+            });
+            line.addView(num);
+            panel.addView(line);
+        }
+        return panel;
     }
 
     private static final String[] CANDIDATES = {

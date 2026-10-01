@@ -21,10 +21,10 @@ import java.util.Map;
 public class HotfixServer {
 
     /** bump this whenever the bundled patch changes, so the game sees a newer version */
-    public static final String PATCH_SERIAL = "56";
+    public static final String PATCH_SERIAL = "57";
 
     /** 补丁要用到的图标，跟着热更清单一起下发到热更目录 */
-    static final String[] EXTRA_ASSETS = {"repair_icon.png", "reinforce_icon.png"};
+    static final String[] EXTRA_ASSETS = {"repair_icon.png", "reinforce_icon.png", "huoxiang_water.png"};
 
     private final Context ctx;
     private final JscPatcher patcher;
