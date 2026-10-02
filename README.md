@@ -68,11 +68,25 @@ app/src/main/java/com/hyqs/injector/
   patch/XXTEA.java         cocos2d-js 的 XXTEA 实现
   patch/JscPatcher.java    project.jsc 的解密、打补丁、重新加密
   patch/Options.java       功能开关
+  update/Updater.java      在线更新：拉取签名清单、下载补丁/图标/新版 APK
+  update/ApkProvider.java  把下载的新版 APK 交给系统安装器
 app/src/main/assets/
   patched_encrypt.js       打过补丁的游戏代码
-  repair_icon.png          自定义图标
-  reinforce_icon.png
+  patch_serial.txt         内置补丁序号（在线补丁序号更大时用在线的）
+  changelog.json           更新日志（注入器【更新日志】按钮）
+  update_pubkey.b64        在线更新验签公钥
+  *.png / *.jpg            补丁用到的自定义图标和图片
+tools/
+  publish.mjs              发布到云端：patch（补丁）/ apk（新版注入器）/ show（查看线上）
+HyqsInjector.apk           最新发布版（给新用户手动安装）
 ```
+
+## 发布
+
+- 只改补丁：`node tools/publish.mjs patch --notes "改了什么"`，序号自动 +1，用户打开注入器即收到
+- 改了界面或 Java：`app/build.gradle` 的 versionCode +1 → `gradle assembleRelease` →
+  `node tools/publish.mjs apk --notes "…"`，再把 `app-release.apk` 复制成根目录 `HyqsInjector.apk`
+- 签名私钥在 `keystore/`（不进版本库），丢了已安装的注入器就无法验证更新
 
 ## 排查
 

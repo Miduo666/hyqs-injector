@@ -91,6 +91,16 @@ public class MainActivity extends Activity implements LogBus.Listener {
             }
         });
         row.addView(stop, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+
+        Button changelog = new Button(this);
+        changelog.setText("更新日志");
+        changelog.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showChangelog();
+            }
+        });
+        row.addView(changelog, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
         root.addView(row);
 
         TextView optTitle = new TextView(this);
@@ -165,6 +175,54 @@ public class MainActivity extends Activity implements LogBus.Listener {
         }
     }
 
+    // ------------------------------------------------------------ 更新日志
+
+    /** 优先用最近一次验签通过的在线 manifest 里的 changelog（发布时写入），没有就用 APK 内置的 assets/changelog.json */
+    private void showChangelog() {
+        org.json.JSONArray log = null;
+        org.json.JSONObject p = lastPayload;
+        if (p != null) log = p.optJSONArray("changelog");
+        if (log == null) {
+            try {
+                java.io.InputStream in = getAssets().open("changelog.json");
+                java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
+                byte[] buf = new byte[8192];
+                int n;
+                while ((n = in.read(buf)) > 0) bos.write(buf, 0, n);
+                in.close();
+                log = new org.json.JSONArray(bos.toString("UTF-8"));
+            } catch (Exception e) {
+                log = new org.json.JSONArray();
+            }
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < log.length(); i++) {
+            org.json.JSONObject e = log.optJSONObject(i);
+            if (e == null) continue;
+            StringBuilder head = new StringBuilder();
+            if (e.has("patch")) head.append("补丁 v").append(e.optInt("patch"));
+            if (e.has("apk")) head.append(head.length() > 0 ? " · " : "").append("注入器 ").append(e.optString("apk"));
+            head.append("  （").append(e.optString("date")).append("）");
+            sb.append(head).append('\n');
+            org.json.JSONArray items = e.optJSONArray("items");
+            for (int j = 0; items != null && j < items.length(); j++) sb.append("  • ").append(items.optString(j)).append('\n');
+            sb.append('\n');
+        }
+        int pad = (int) (16 * getResources().getDisplayMetrics().density);
+        TextView tv = new TextView(this);
+        tv.setText(sb.length() > 0 ? sb.toString().trim() : "暂无更新日志");
+        tv.setTextSize(13);
+        tv.setTextIsSelectable(true);
+        tv.setPadding(pad, pad / 2, pad, pad / 2);
+        ScrollView sv = new ScrollView(this);
+        sv.addView(tv);
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("更新日志")
+                .setView(sv)
+                .setPositiveButton("关闭", null)
+                .show();
+    }
+
     // ------------------------------------------------------------ 在线更新
 
     private void refreshVersion() {
@@ -208,10 +266,11 @@ public class MainActivity extends Activity implements LogBus.Listener {
                         boolean inject = beforeInject || pendingInject;
                         pendingInject = false;
                         if (inject) {
-                            if (apk != null && apk.optBoolean("force")) showApkDialog(apk);
+                            if (apk != null && apk.optBoolean("force")) showApkDialog(apk, null);
                             else proceedInject();   // 正要注入：新补丁直接用上（服务在运行就让它换补丁）
                         } else if (apk != null) {
-                            showApkDialog(apk);     // 新版注入器优先提示（新版自带更新的补丁）
+                            // 新版注入器优先提示；这次刚下好的补丁写进同一个弹窗，不然点了【稍后】就再也看不到
+                            showApkDialog(apk, patchUpdated ? lastPayload.optJSONObject("patch") : null);
                         } else if (patchUpdated) {
                             showPatchDialog(lastPayload.optJSONObject("patch"));
                         }
@@ -221,33 +280,38 @@ public class MainActivity extends Activity implements LogBus.Listener {
         }).start();
     }
 
-    /** 打开时后台拿到了新补丁：补丁要注入后（游戏重开）才生效，直接问要不要现在注入 */
+    /** 打开时后台已经把新补丁下好了：不注入也不会丢，下次注入自动用；这里只是给个"现在就用"的快捷入口 */
     private void showPatchDialog(org.json.JSONObject patch) {
         if (isFinishing() || patch == null) return;
         String notes = patch.optString("notes", "");
         boolean running = InjectVpnService.running;
         new android.app.AlertDialog.Builder(this)
-                .setTitle("补丁已更新到 v" + patch.optInt("serial"))
+                .setTitle("补丁 v" + patch.optInt("serial") + " 已下载")
                 .setMessage((notes.isEmpty() ? "" : notes + "\n\n")
-                        + (running ? "注入服务正在运行，点【立即生效】换上新补丁，然后完全退出并重新打开游戏。"
-                                   : "新补丁要注入后才会生效。点【立即注入】，然后打开（或重开）游戏。"))
-                .setPositiveButton(running ? "立即生效" : "立即注入", new android.content.DialogInterface.OnClickListener() {
+                        + "下次注入时自动使用。\n\n"
+                        + (running ? "注入服务正在运行，点【现在换上】切换到新补丁"
+                                   : "想现在就用，点【现在注入】")
+                        + "；如果游戏已在运行，需完全退出后重开游戏。")
+                .setPositiveButton(running ? "现在换上" : "现在注入", new android.content.DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(android.content.DialogInterface d, int w) {
                         proceedInject();
                     }
                 })
-                .setNegativeButton("稍后", null)
+                .setNegativeButton("知道了", null)
                 .show();
     }
 
-    private void showApkDialog(final org.json.JSONObject apk) {
+    /** patch 非空：这次同时下好了新补丁，在同一个弹窗里顺带说明 */
+    private void showApkDialog(final org.json.JSONObject apk, org.json.JSONObject patch) {
         if (isFinishing()) return;
         final boolean force = apk.optBoolean("force");
         String notes = apk.optString("notes", "");
+        String patchLine = patch == null ? ""
+                : "另外，补丁 v" + patch.optInt("serial") + " 已下载，不更新注入器也能用，下次注入时自动使用。\n\n";
         android.app.AlertDialog.Builder b = new android.app.AlertDialog.Builder(this)
                 .setTitle("注入器有新版本 v" + apk.optString("versionName"))
-                .setMessage((notes.isEmpty() ? "" : notes + "\n\n") + "大小 " + apk.optInt("size") / 1024 + " KB。"
+                .setMessage((notes.isEmpty() ? "" : notes + "\n\n") + patchLine + "大小 " + apk.optInt("size") / 1024 + " KB。"
                         + "下载后系统会弹出安装确认，点【安装】即可覆盖更新，设置和勾选都会保留。"
                         + (force ? "\n\n这个版本必须更新后才能继续注入。" : ""))
                 .setCancelable(!force)
@@ -521,7 +585,7 @@ public class MainActivity extends Activity implements LogBus.Listener {
         // 注入前确认补丁是最新的：1 分钟内查过就不再查，否则先快速查一次（最多几秒，失败照常注入）
         if (System.currentTimeMillis() - lastCheckMs < 60_000) {
             org.json.JSONObject apk = com.hyqs.injector.update.Updater.newerApk(this, lastPayload);
-            if (apk != null && apk.optBoolean("force")) showApkDialog(apk);
+            if (apk != null && apk.optBoolean("force")) showApkDialog(apk, null);
             else proceedInject();
         } else {
             checkUpdates(true);

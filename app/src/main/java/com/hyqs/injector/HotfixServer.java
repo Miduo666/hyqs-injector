@@ -24,7 +24,10 @@ public class HotfixServer {
     public static final String PATCH_SERIAL = "57";
 
     /** 补丁要用到的图标，跟着热更清单一起下发到热更目录 */
-    static final String[] EXTRA_ASSETS = {"repair_icon.png", "reinforce_icon.png", "huoxiang_water.png"};
+    static final String[] EXTRA_ASSETS = {"repair_icon.png", "reinforce_icon.png", "huoxiang_water.png", "wool_coat.png",
+            "den_box_mid.jpg", "den_box_high.jpg",
+            "refined_4103.png", "refined_4139.png", "refined_4146.png", "refined_4125.png", "refined_4137.png",
+            "turkey_icon.png"};
 
     private final Context ctx;
     private volatile JscPatcher patcher;
@@ -147,7 +150,7 @@ public class HotfixServer {
                     byte[] body = asset(icon);
                     if (body == null) return notFound();
                     LogBus.log("交付图标 " + icon + " (" + body.length + " 字节)");
-                    return ok(body, "image/png");
+                    return ok(body, lower.endsWith(".jpg") ? "image/jpeg" : "image/png");
                 }
             }
             if (lower.endsWith("/src/project.jsc")) {
@@ -155,6 +158,7 @@ public class HotfixServer {
                 if ("GET".equalsIgnoreCase(method)) {
                     jscDelivered = true;
                     LogBus.log("补丁 project.jsc 已交付游戏 (" + body.length + " 字节)");
+                    LogBus.log("你知道吗，有一些功能为了防止占位，放到了游戏的设置按钮里，如果你没找到想要的功能的话，到设置里找找。");
                 }
                 return ok(body, "application/octet-stream");
             }
